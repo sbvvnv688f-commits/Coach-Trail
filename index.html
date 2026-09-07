@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#16281F">
+<title>Coach Trail</title>
+<style>
+:root{
+  --paper:#F4F3EE;
+  --ink:#16281F;
+  --ink-soft:#5C6B62;
+  --sapin:#2E6B4F;
+  --bistre:#9C6B3F;
+  --alerte:#B03A2E;
+  --rule:#DAD8D0;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  background:var(--paper);color:var(--ink);
+  font-size:16px;line-height:1.5;
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+.num{font-variant-numeric:tabular-nums;letter-spacing:-0.01em}
+
+.shell{display:flex;flex-direction:column;height:100vh}
+
+header{
+  background:var(--ink);color:var(--paper);
+  padding:calc(0.7rem + env(safe-area-inset-top)) 1rem 0.7rem;
+  flex-shrink:0;
+}
+.who{display:flex;gap:0.5rem}
+.who button{
+  flex:1;padding:0.5rem;border:1px solid rgba(244,243,238,.25);
+  background:none;color:rgba(244,243,238,.55);
+  border-radius:6px;font-size:0.85rem;font-weight:600;
+  font-family:inherit;cursor:pointer;
+}
+.who button[aria-pressed="true"]{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+
+nav{
+  display:flex;gap:1.2rem;padding:0 1rem;
+  background:var(--ink);flex-shrink:0;
+}
+nav button{
+  background:none;border:none;font-family:inherit;cursor:pointer;
+  color:rgba(244,243,238,.5);font-size:0.85rem;font-weight:600;
+  padding:0.55rem 0;border-bottom:2px solid transparent;
+}
+nav button[aria-selected="true"]{color:var(--paper);border-bottom-color:var(--bistre)}
+
+main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:1rem 1rem 3rem}
+.panel{display:none}
+.panel.on{display:block}
+
+.charge{margin-bottom:1.1rem}
+.charge-bars{display:flex;align-items:flex-end;gap:4px;height:56px}
+.charge-bars button{
+  flex:1;background:var(--rule);border:none;border-radius:2px 2px 0 0;
+  cursor:pointer;padding:0;font-family:inherit;
+}
+.charge-bars button.peak{background:#D9C4AC}
+.charge-bars button[aria-current="true"]{background:var(--sapin)}
+.charge-bars button[aria-current="true"].peak{background:var(--bistre)}
+.charge-scale{
+  display:flex;justify-content:space-between;
+  font-size:0.6rem;color:var(--ink-soft);margin-top:4px;
+}
+
+.weekhead{
+  display:flex;justify-content:space-between;align-items:baseline;
+  border-bottom:1px solid var(--rule);padding-bottom:0.5rem;margin-bottom:0.9rem;
+}
+.weekhead h2{font-size:1.15rem;font-weight:700}
+.weekhead .dates{font-size:0.75rem;color:var(--ink-soft)}
+.weektotal{
+  display:flex;gap:1.4rem;font-size:0.72rem;color:var(--ink-soft);
+  margin-bottom:1rem;
+}
+.weektotal b{color:var(--ink);font-size:0.95rem;font-weight:700;display:block}
+
+.tag{
+  display:inline-block;font-size:0.65rem;font-weight:700;
+  padding:2px 7px;border-radius:3px;margin-bottom:0.6rem;
+}
+.tag.light{background:#E4E8E3;color:var(--sapin)}
+.tag.peak{background:#F0E2D2;color:var(--bistre)}
+.tag.race{background:#F5DDD9;color:var(--alerte)}
+
+.session{
+  width:100%;text-align:left;background:#fff;border:1px solid var(--rule);
+  border-left:3px solid var(--sapin);border-radius:0 8px 8px 0;
+  padding:0.75rem 0.85rem;margin-bottom:0.5rem;
+  font-family:inherit;cursor:pointer;display:block;color:inherit;
+}
+.session:active{background:#F7F9F7}
+.session.key{border-left-color:var(--bistre)}
+.session.race{border-left-color:var(--alerte)}
+.session .day{font-size:0.7rem;color:var(--ink-soft);font-weight:600}
+.session .title{font-size:0.95rem;font-weight:700;margin:1px 0 3px}
+.session .meta{font-size:0.78rem;color:var(--ink-soft)}
+.session .meta span{margin-right:0.7rem}
+
+.sheet{
+  position:fixed;inset:0;background:rgba(22,40,31,.5);
+  display:none;align-items:flex-end;z-index:50;
+}
+.sheet.on{display:flex}
+.sheet-in{
+  background:var(--paper);width:100%;max-height:88vh;overflow-y:auto;
+  border-radius:14px 14px 0 0;padding:1.1rem 1.1rem calc(2rem + env(safe-area-inset-bottom));
+}
+.sheet-top{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:0.9rem}
+.sheet-top h3{font-size:1.2rem;font-weight:700;line-height:1.25}
+.sheet-top .sub{font-size:0.75rem;color:var(--ink-soft);margin-top:2px}
+.sheet-top button{
+  background:none;border:none;font-size:1.5rem;line-height:1;
+  color:var(--ink-soft);cursor:pointer;font-family:inherit;
+}
+.figs{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:8px;overflow:hidden;margin-bottom:0.9rem}
+.fig{background:#fff;padding:0.6rem 0.5rem;text-align:center}
+.fig b{display:block;font-size:1.1rem;font-weight:700}
+.fig span{font-size:0.65rem;color:var(--ink-soft)}
+.block{margin-bottom:0.8rem}
+.block h4{font-size:0.7rem;color:var(--ink-soft);font-weight:700;margin-bottom:0.25rem}
+.block p{font-size:0.9rem}
+.block ul{list-style:none;font-size:0.9rem}
+.block li{padding-left:0.9rem;position:relative;margin-bottom:0.15rem}
+.block li::before{content:"";position:absolute;left:0;top:0.65em;width:5px;height:1px;background:var(--bistre)}
+.warn{background:#F7EDE8;border-left:3px solid var(--alerte);padding:0.6rem 0.7rem;border-radius:0 6px 6px 0;font-size:0.85rem}
+
+.scen{border:1px solid var(--rule);background:#fff;border-radius:8px;padding:0.8rem;margin-bottom:0.6rem}
+.scen.pick{border-color:var(--sapin);border-width:2px}
+.scen-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.25rem}
+.scen-top b{font-size:0.9rem}
+.scen-top .t{font-size:1.25rem;font-weight:700}
+.scen p{font-size:0.78rem;color:var(--ink-soft)}
+
+.chk{border-left:2px solid var(--rule);padding-left:0.9rem;margin-left:0.3rem}
+.chk-item{position:relative;padding-bottom:1rem}
+.chk-item::before{content:"";position:absolute;left:calc(-0.9rem - 5px);top:0.45em;width:8px;height:8px;border-radius:50%;background:var(--bistre)}
+.chk-item b{font-size:0.9rem}
+.chk-item p{font-size:0.8rem;color:var(--ink-soft)}
+
+label{display:block;font-size:0.7rem;color:var(--ink-soft);font-weight:600;margin-bottom:3px}
+input,select{
+  width:100%;padding:0.5rem;border:1px solid var(--rule);border-radius:6px;
+  font-size:1rem;font-family:inherit;background:#fff;color:var(--ink);
+  margin-bottom:0.6rem;-webkit-appearance:none;
+}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem}
+button.act{
+  width:100%;padding:0.7rem;border:none;border-radius:6px;
+  background:var(--sapin);color:var(--paper);font-size:0.9rem;font-weight:700;
+  font-family:inherit;cursor:pointer;
+}
+.zrow{display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--rule);font-size:0.85rem}
+.zrow span{color:var(--ink-soft)}
+h3.sec{font-size:0.95rem;font-weight:700;margin:1.2rem 0 0.6rem}
+.log{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:0.6rem;margin-bottom:0.4rem;font-size:0.85rem}
+.log .meta{font-size:0.75rem;color:var(--ink-soft);margin-top:2px}
+.empty{font-size:0.85rem;color:var(--ink-soft);padding:1rem 0;text-align:center}
+.drop{
+  width:100%;display:block;text-align:left;background:#fff;
+  border:1px dashed var(--sapin);border-radius:8px;
+  padding:1rem;font-family:inherit;color:inherit;cursor:pointer;margin-bottom:1rem;
+}
+.drop.over{background:#EDF3EF}
+.drop b{display:block;font-size:0.95rem;font-weight:700}
+.drop span{font-size:0.78rem;color:var(--ink-soft)}
+.split{display:grid;grid-template-columns:2.2rem 1fr auto;gap:0.6rem;align-items:center;padding:0.35rem 0;border-bottom:1px solid var(--rule);font-size:0.82rem}
+.split .kmno{color:var(--ink-soft);font-size:0.75rem}
+.split .bar{height:6px;background:var(--rule);border-radius:3px;overflow:hidden}
+.split .bar i{display:block;height:100%;background:var(--sapin)}
+.split .bar i.slow{background:var(--bistre)}
+.split .val{text-align:right;white-space:nowrap}
+.split .val em{font-style:normal;color:var(--ink-soft);font-size:0.72rem;margin-left:0.4rem}
+.cmp{display:grid;grid-template-columns:1fr auto auto;gap:0.6rem;padding:0.4rem 0;border-bottom:1px solid var(--rule);font-size:0.85rem}
+.cmp span{color:var(--ink-soft)}
+.cmp .ok{color:var(--sapin);font-weight:700}
+.cmp .off{color:var(--bistre);font-weight:700}
+.opt{
+  display:block;text-align:left;background:#fff;border:1px solid var(--rule);
+  border-radius:8px;padding:0.6rem;font-family:inherit;color:inherit;cursor:pointer;
+  margin-bottom:0.6rem;
+}
+.opt.on{border-color:var(--sapin);border-width:2px;padding:calc(0.6rem - 1px)}
+.opt b{display:block;font-size:0.9rem;font-weight:700}
+.opt span{font-size:0.72rem;color:var(--ink-soft)}
+.toast{
+  position:fixed;bottom:calc(1.5rem + env(safe-area-inset-bottom));left:50%;
+  transform:translateX(-50%);background:var(--ink);color:var(--paper);
+  padding:0.6rem 1.1rem;border-radius:6px;font-size:0.85rem;z-index:99;
+}
+:focus-visible{outline:2px solid var(--bistre);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div class="who">
+      <button onclick="setAth('edgar')" aria-pressed="true" id="wE">Edgar</button>
+      <button onclick="setAth('laurie')" aria-pressed="false" id="wL">Laurie</button>
+    </div>
+  </header>
+  <nav>
+    <button onclick="setTab('plan')" aria-selected="true" id="tPlan">Plan</button>
+    <button onclick="setTab('goal')" aria-selected="false" id="tGoal">Objectif</button>
+    <button onclick="setTab('me')" aria-selected="false" id="tMe">Réglages</button>
+    <button onclick="setTab('log')" aria-selected="false" id="tLog">Carnet</button>
+  </nav>
+
+  <main>
+    <section id="plan" class="panel on">
+      <div class="charge">
+        <div class="charge-bars" id="bars"></div>
+        <div class="charge-scale"><span>7 sept</span><span>charge hebdomadaire</span><span>1 nov</span></div>
+      </div>
+      <div class="weekhead">
+        <h2 id="wkTitle">Semaine 1</h2>
+        <div class="dates num" id="wkDates"></div>
+      </div>
+      <div id="wkTag"></div>
+      <div class="weektotal">
+        <div><b class="num" id="wkKm"></b>volume</div>
+        <div><b class="num" id="wkD"></b>dénivelé positif</div>
+        <div><b class="num" id="wkLong"></b>sortie longue</div>
+      </div>
+      <div id="sessions"></div>
+    </section>
+
+    <section id="goal" class="panel"></section>
+
+    <section id="me" class="panel">
+      <h3 class="sec">Allures de référence sur plat</h3>
+      <div class="pair">
+        <div><label for="aFond">Fondamental (min/km)</label><input type="number" step="0.1" id="aFond"></div>
+        <div><label for="aTempo">Tempo (min/km)</label><input type="number" step="0.1" id="aTempo"></div>
+        <div><label for="aSeuil">Seuil (min/km)</label><input type="number" step="0.1" id="aSeuil"></div>
+        <div><label for="aRecup">Récupération (min/km)</label><input type="number" step="0.1" id="aRecup"></div>
+      </div>
+      <label for="aFc">Fréquence cardiaque maximale (bpm)</label>
+      <input type="number" id="aFc">
+      <button class="act" onclick="saveMe()">Enregistrer les allures</button>
+      <div id="rythme"></div>
+      <div id="zones"></div>
+    </section>
+
+    <section id="log" class="panel">
+      <button class="drop" id="drop" onclick="pick.click()">
+        <b>Importer une séance Suunto</b>
+        <span>Export JSON de la montre. Touche pour choisir le fichier.</span>
+      </button>
+      <input type="file" id="pick" accept=".json,application/json" hidden>
+      <div id="suuntoOut"></div>
+
+      <h3 class="sec">Ou saisir à la main</h3>
+      <label for="lDate">Date</label><input type="date" id="lDate">
+      <label for="lType">Séance</label>
+      <select id="lType">
+        <option value="">Choisir</option>
+        <option>Seuil</option><option>Côtes</option>
+        <option>Endurance</option><option>Sortie longue</option>
+        <option>Natation</option>
+      </select>
+      <div class="pair">
+        <div><label for="lKm">Distance (km)</label><input type="number" step="0.1" id="lKm"></div>
+        <div><label for="lMin">Durée (min)</label><input type="number" id="lMin"></div>
+        <div><label for="lD">D+ (m)</label><input type="number" id="lD"></div>
+        <div><label for="lFc">FC moyenne</label><input type="number" id="lFc"></div>
+      </div>
+      <label for="lNote">Sensations, douleurs</label><input type="text" id="lNote" placeholder="Jambe gauche, fatigue, météo…">
+      <button class="act" onclick="saveLog()">Enregistrer la séance</button>
+      <h3 class="sec">Séances enregistrées</h3>
+      <div id="logList"></div>
+    </section>
+  </main>
+</div>
+
+<div class="sheet" id="sheet" onclick="if(event.target===this)closeSheet()">
+  <div class="sheet-in" id="sheetIn"></div>
+</div>
+
+<script>
+const DATES=["7 – 13 sept","14 – 20 sept","21 – 27 sept","28 sept – 4 oct","5 – 11 oct","12 – 18 oct","19 – 25 oct","26 oct – 1 nov"];
+
+const PLAN={
+edgar:{
+ vol:[40,44,48,34,53,58,42,20], dplus:[700,850,1000,600,1200,1400,900,350],
+ w:[
+ [
+  {d:"Lundi",t:"Seuil 2 × 8 min",k:10,dp:100,f:"tempo",c:["15 min d'échauffement","2 blocs de 8 min à allure tempo","3 min de trot entre les blocs","10 min de retour au calme"],w:"Première séance de qualité : reste en dessous de tes sensations, la marge se prend plus tard."},
+  {d:"Mercredi",t:"Côtes 6 × 2 min",k:8,dp:300,f:"cotes",c:["15 min d'échauffement, tes 2 km de route inclus","6 montées de 2 min en course soutenue","Descente en trottinant entre chaque","10 min de retour au calme","15 min de renforcement"],w:"Course soutenue, pas sprint. La sixième doit ressembler à la première."},
+  {d:"Jeudi",t:"Endurance fondamentale",k:7,dp:60,f:"fond",c:["45 à 60 min sur terrain roulant","Allure basse, respiration facile"],w:"Cette séance ne doit jamais être rapide. Si tu finis essoufflé, elle est ratée."},
+  {d:"Dimanche",t:"Sortie longue 16 km",k:16,dp:300,f:"fond",c:["16 km à allure fondamentale stricte","Terrain varié, aucun bloc rapide"],w:""}
+ ],[
+  {d:"Lundi",t:"Seuil 3 × 8 min",k:11,dp:100,f:"tempo",c:["15 min d'échauffement","3 blocs de 8 min à allure tempo","3 min de trot entre les blocs","10 min de retour au calme"],w:""},
+  {d:"Mercredi",t:"Côtes 7 × 2 min",k:8,dp:350,f:"cotes",c:["15 min d'échauffement","7 montées de 2 min","Descente en trottinant","10 min de retour au calme","15 min de renforcement"],w:""},
+  {d:"Jeudi",t:"Endurance fondamentale",k:7,dp:60,f:"fond",c:["45 à 60 min, allure basse"],w:""},
+  {d:"Dimanche",t:"Sortie longue 18 km",k:18,dp:400,f:"fond",c:["18 km, terrain varié","Allure fondamentale"],w:""}
+ ],[
+  {d:"Lundi",t:"Seuil 2 × 12 min",k:12,dp:120,f:"tempo",c:["15 min d'échauffement","2 blocs de 12 min à allure tempo","3 min de trot entre les blocs","10 min de retour au calme"],w:""},
+  {d:"Mercredi",t:"Côtes 8 × 2 min",k:9,dp:400,f:"cotes",c:["15 min d'échauffement","8 montées de 2 min","Descente en trottinant","10 min de retour au calme","15 min de renforcement"],w:""},
+  {d:"Jeudi",t:"Endurance fondamentale",k:7,dp:60,f:"fond",c:["45 à 60 min, allure basse"],w:""},
+  {d:"Dimanche",t:"Sortie longue 21 km",k:21,dp:500,f:"fond",c:["21 km à allure fondamentale","Premier test nutrition : une barre à 1 h, puis toutes les 40 min","400 à 500 ml de boisson par heure"],w:"Premier point de contrôle du plan. Note ton allure moyenne, ta fréquence cardiaque et l'état de la jambe gauche le lendemain.",key:true}
+ ],[
+  {d:"Lundi",t:"Seuil 2 × 8 min souple",k:8,dp:80,f:"tempo",c:["15 min d'échauffement","2 blocs de 8 min, sans forcer","10 min de retour au calme"],w:""},
+  {d:"Mercredi",t:"Côtes 5 × 2 min",k:6,dp:250,f:"cotes",c:["15 min d'échauffement","5 montées de 2 min","Descente marchée","15 min de renforcement"],w:""},
+  {d:"Jeudi",t:"Endurance fondamentale",k:6,dp:50,f:"fond",c:["45 min, allure basse"],w:""},
+  {d:"Dimanche",t:"Sortie longue 15 km",k:15,dp:300,f:"fond",c:["15 km, écoute des sensations","Aucune contrainte d'allure"],w:"Semaine allégée : résiste à l'envie d'en faire plus. C'est là que les progrès se fixent."}
+ ],[
+  {d:"Lundi",t:"Seuil 3 × 10 min",k:12,dp:120,f:"seuil",c:["15 min d'échauffement","3 blocs de 10 min à allure seuil","3 min de trot entre les blocs","10 min de retour au calme"],w:""},
+  {d:"Mercredi",t:"Côtes 6 × 3 min",k:10,dp:450,f:"cotes",c:["15 min d'échauffement","6 montées de 3 min","Descente en trottinant","10 min de retour au calme","15 min de renforcement"],w:""},
+  {d:"Jeudi",t:"Endurance fondamentale",k:8,dp:70,f:"fond",c:["50 à 60 min, allure basse"],w:""},
+  {d:"Dimanche",t:"Sortie longue 24 km",k:24,dp:600,f:"fond",c:["24 km avec bitume et escaliers","Chercher des volées d'escaliers en descente","Nutrition toutes les 40 min"],w:"Première sortie spécifique. Les escaliers en descente sont ce qui casse sur un urban trail : introduis-les ici, pas le jour J.",key:true}
+ ],[
+  {d:"Lundi",t:"Seuil 2 × 15 min",k:13,dp:120,f:"seuil",c:["15 min d'échauffement","2 blocs de 15 min à allure seuil","4 min de trot entre les blocs","10 min de retour au calme"],w:""},
+  {d:"Mercredi",t:"Côtes 8 × 3 min",k:10,dp:550,f:"cotes",c:["15 min d'échauffement","8 montées de 3 min","Descente en trottinant","10 min de retour au calme","15 min de renforcement"],w:"Séance de côtes la plus lourde du plan."},
+  {d:"Jeudi",t:"Endurance fondamentale",k:8,dp:70,f:"fond",c:["50 à 60 min, allure basse"],w:""},
+  {d:"Dimanche",t:"Répétition générale 28 km",k:28,dp:750,f:"fond",c:["28 km avec bitume et escaliers","Tenue, chaussures et sac du jour J","Nutrition complète, rien de nouveau","Départ à l'heure de la course"],w:"Séance clé de la préparation. Son chrono sert à fixer l'objectif définitif du 1er novembre.",key:true}
+ ],[
+  {d:"Lundi",t:"Tempo 20 min continu",k:10,dp:100,f:"tempo",c:["15 min d'échauffement","20 min en continu à allure tempo","10 min de retour au calme"],w:""},
+  {d:"Mercredi",t:"Côtes 6 × 2 min",k:8,dp:300,f:"cotes",c:["15 min d'échauffement","6 montées de 2 min","Descente en trottinant","15 min de renforcement"],w:""},
+  {d:"Jeudi",t:"Endurance fondamentale",k:6,dp:50,f:"fond",c:["45 min, allure basse"],w:""},
+  {d:"Dimanche",t:"Sortie longue 20 km",k:20,dp:500,f:"fond",c:["20 km dont 5 km à allure course au milieu","Reste à allure fondamentale"],w:"Dernier volume conséquent. À partir d'ici, tout va vers la fraîcheur."}
+ ],[
+  {d:"Lundi",t:"Rappel 3 × 3 min",k:7,dp:80,f:"tempo",c:["15 min d'échauffement","3 blocs de 3 min à allure course","10 min de retour au calme"],w:"Court et vif. Le but est de réveiller la foulée, pas de créer de la fatigue."},
+  {d:"Mercredi",t:"Côtes 4 × 90 s",k:5,dp:150,f:"cotes",c:["15 min d'échauffement","4 montées de 90 s","Descente marchée"],w:""},
+  {d:"Jeudi",t:"Déverrouillage",k:4,dp:20,f:"recup",c:["25 à 30 min très souple","Quelques accélérations de 20 s"],w:"Dernière sortie. Repos complet vendredi et samedi."},
+  {d:"Dimanche",t:"Saint-Étienne Urban Trail",k:42,dp:1200,f:"course",c:["42 km, 1200 m de dénivelé positif","Prise alimentaire toutes les 40 min dès la 45e","400 à 500 ml de boisson par heure","Prudence sur les 10 premiers kilomètres"],w:"Partir sur une cible trop rapide se paie au 30e kilomètre. Tiens l'allure décidée après la semaine 6.",race:true}
+ ]]
+},
+laurie:{
+ vol:[26,29,32,23,35,38,28,14], dplus:[400,480,560,350,680,800,500,200],
+ w:[
+ [
+  {d:"Jour 1",t:"Endurance + tempo",k:9,dp:100,f:"fond",c:["30 min à allure fondamentale","2 blocs de 6 min à allure tempo","10 min de retour au calme"],w:""},
+  {d:"Jour 2",t:"Côtes 5 × 90 s",k:7,dp:180,f:"cotes",c:["15 min d'échauffement","5 montées de 90 s","Descente marchée","15 min de renforcement"],w:"Descente marchée : les genoux ne travaillent pas en excentrique sur cette séance."},
+  {d:"Jour 3",t:"Natation",k:0,dp:0,f:"nat",c:["30 à 35 min en continu"],w:"Volume aérobie sans contrainte articulaire. Ce n'est pas un jour de repos."},
+  {d:"Week-end",t:"Sortie longue 10 km",k:10,dp:200,f:"fond",c:["10 km à allure fondamentale","Pentes douces en descente"],w:""}
+ ],[
+  {d:"Jour 1",t:"Endurance + tempo",k:10,dp:110,f:"fond",c:["35 min à allure fondamentale","2 blocs de 8 min à allure tempo","10 min de retour au calme"],w:""},
+  {d:"Jour 2",t:"Côtes 6 × 90 s",k:7,dp:220,f:"cotes",c:["15 min d'échauffement","6 montées de 90 s","Descente marchée","15 min de renforcement"],w:""},
+  {d:"Jour 3",t:"Natation",k:0,dp:0,f:"nat",c:["30 à 35 min en continu"],w:""},
+  {d:"Week-end",t:"Sortie longue 12 km",k:12,dp:250,f:"fond",c:["12 km, terrain varié"],w:""}
+ ],[
+  {d:"Jour 1",t:"Endurance + tempo",k:10,dp:120,f:"fond",c:["35 min à allure fondamentale","3 blocs de 7 min à allure tempo","10 min de retour au calme"],w:""},
+  {d:"Jour 2",t:"Côtes 7 × 90 s",k:8,dp:250,f:"cotes",c:["15 min d'échauffement","7 montées de 90 s","Descente marchée","15 min de renforcement"],w:""},
+  {d:"Jour 3",t:"Natation",k:0,dp:0,f:"nat",c:["30 à 35 min en continu"],w:""},
+  {d:"Week-end",t:"Sortie longue 14 km",k:14,dp:300,f:"fond",c:["14 km à allure fondamentale","Premier test nutrition : une prise à 1 h"],w:"Premier point de contrôle. Note l'état des genoux le lendemain.",key:true}
+ ],[
+  {d:"Jour 1",t:"Endurance souple",k:7,dp:70,f:"fond",c:["40 min sans bloc rapide"],w:""},
+  {d:"Jour 2",t:"Côtes 5 × 90 s",k:5,dp:180,f:"cotes",c:["15 min d'échauffement","5 montées de 90 s","Descente marchée","15 min de renforcement"],w:""},
+  {d:"Jour 3",t:"Natation",k:0,dp:0,f:"nat",c:["30 min souple"],w:""},
+  {d:"Week-end",t:"Sortie longue 11 km",k:11,dp:200,f:"fond",c:["11 km, sensations libres"],w:"Semaine allégée : c'est là que les progrès se fixent."}
+ ],[
+  {d:"Jour 1",t:"Endurance + tempo",k:11,dp:130,f:"fond",c:["35 min à allure fondamentale","3 blocs de 8 min à allure tempo","10 min de retour au calme"],w:""},
+  {d:"Jour 2",t:"Côtes 6 × 2 min",k:8,dp:300,f:"cotes",c:["15 min d'échauffement","6 montées de 2 min","Descente marchée","15 min de renforcement"],w:""},
+  {d:"Jour 3",t:"Natation",k:0,dp:0,f:"nat",c:["35 à 40 min en continu"],w:""},
+  {d:"Week-end",t:"Sortie longue 16 km",k:16,dp:380,f:"fond",c:["16 km avec les semelles orthopédiques","Nutrition toutes les 40 min"],w:"Première sortie longue avec les semelles. La contrainte articulaire diffère de l'entraînement habituel : c'est le moment de le découvrir.",key:true}
+ ],[
+  {d:"Jour 1",t:"Endurance + tempo",k:12,dp:140,f:"fond",c:["40 min à allure fondamentale","3 blocs de 8 min à allure tempo","10 min de retour au calme"],w:""},
+  {d:"Jour 2",t:"Côtes 7 × 2 min",k:8,dp:360,f:"cotes",c:["15 min d'échauffement","7 montées de 2 min","Descente marchée","15 min de renforcement"],w:"Séance de côtes la plus lourde du plan."},
+  {d:"Jour 3",t:"Natation",k:0,dp:0,f:"nat",c:["40 min en continu"],w:""},
+  {d:"Week-end",t:"Répétition générale 18 km",k:18,dp:450,f:"fond",c:["18 km avec semelles, tenue et sac du jour J","Nutrition complète, rien de nouveau","Départ à l'heure de la course"],w:"Séance clé. Son chrono fixe l'objectif du 1er novembre.",key:true}
+ ],[
+  {d:"Jour 1",t:"Endurance + tempo",k:9,dp:100,f:"fond",c:["30 min à allure fondamentale","2 blocs de 6 min à allure tempo"],w:""},
+  {d:"Jour 2",t:"Côtes 5 × 90 s",k:5,dp:180,f:"cotes",c:["15 min d'échauffement","5 montées de 90 s","Descente marchée"],w:""},
+  {d:"Jour 3",t:"Natation",k:0,dp:0,f:"nat",c:["30 à 35 min souple"],w:""},
+  {d:"Week-end",t:"Sortie longue 14 km",k:14,dp:300,f:"fond",c:["14 km à allure fondamentale"],w:"Dernier volume conséquent."}
+ ],[
+  {d:"Jour 1",t:"Rappel 3 × 3 min",k:6,dp:60,f:"fond",c:["15 min d'échauffement","3 blocs de 3 min à allure course","10 min de retour au calme"],w:""},
+  {d:"Jour 2",t:"Côtes 4 × 60 s",k:4,dp:100,f:"cotes",c:["15 min d'échauffement","4 montées de 60 s","Descente marchée"],w:""},
+  {d:"Jour 3",t:"Natation souple",k:0,dp:0,f:"nat",c:["25 min très facile"],w:"Repos complet les deux jours précédant la course."},
+  {d:"Week-end",t:"Saint-Étienne Urban Trail",k:20,dp:600,f:"course",c:["20 km, environ 600 m de dénivelé","Semelles orthopédiques","Prise alimentaire toutes les 40 min dès la 45e"],w:"Le dénivelé du parcours reste à confirmer auprès de l'organisation.",race:true}
+ ]]
+}};
+
+const GOAL={
+ edgar:{race:"42 km · 1200 m D+",eq:54,
+  sc:[["Ambitieux","4h50","5'20/km sur plat équivalent. Suppose une préparation sans accroc."],
+      ["Réaliste","5h10","5'45/km. La cible autour de laquelle construire la stratégie de course."],
+      ["Repli","5h35","6'10/km. Gestion prudente si la jambe gauche se manifeste."]],
+  chk:[["Fin semaine 3 — 27 septembre","Sortie de 21 km. Ce qui compte : allure d'effort à fréquence cardiaque contenue, et l'état de la jambe gauche le lendemain."],
+       ["Fin semaine 6 — 18 octobre","Sortie de 28 km avec 750 m de D+. C'est le vrai prédicteur : son chrono fixe la cible définitive."]],
+  tbl:[["2h40","≈ 4h12"],["3h00","≈ 4h43"],["3h20","≈ 5h15"]],
+  tblNote:"Projection à partir du chrono de la semaine 6 sur 28 km et 750 m de D+.",
+  warn:"Descendre sous 4h demanderait de boucler la semaine 6 en 2h32, soit environ vingt minutes plus vite que le scénario ambitieux. Peu probable sur huit semaines, mais l'écart n'est plus hors d'atteinte : la semaine 6 tranchera."},
+ laurie:{race:"20 km · environ 600 m D+",eq:26,
+  sc:[["Ambitieux","3h10","7'20/km sur plat équivalent."],
+      ["Réaliste","3h25","8'00/km. La cible de travail."],
+      ["Repli","3h40","8'30/km, gestion prudente des genoux."]],
+  chk:[["Fin semaine 3 — 27 septembre","Sortie de 14 km. Référence d'allure et état des genoux le lendemain."],
+       ["Fin semaine 6 — 18 octobre","Sortie de 18 km avec les semelles. Fixe la cible définitive."]],
+  tbl:[["2h10","≈ 3h05"],["2h25","≈ 3h25"],["2h40","≈ 3h45"]],
+  tblNote:"Projection à partir du chrono de la semaine 6 sur 18 km et 450 m de D+.",
+  warn:"Le dénivelé du 20 km est estimé à 600 m. À confirmer sur le profil officiel : il déplace la cible de plusieurs minutes."}
+};
+
+const APPOINT={
+ edgar:[
+  {d:"Vendredi",t:"Appoint — endurance souple",k:6,dp:50,f:"recup",c:["45 min sur terrain roulant","Allure de récupération, plus lente que le jeudi","Aucune côte, aucun bloc rapide"],w:"Séance d'appoint : elle ajoute du volume aérobie sans fatigue. Au moindre signal de la jambe gauche, elle saute — c'est la première du plan à sacrifier."},
+  {d:"Vendredi",t:"Appoint — endurance souple",k:7,dp:50,f:"recup",c:["45 à 50 min, terrain roulant","Allure de récupération"],w:"À sauter sans hésiter si la fatigue s'accumule."},
+  {d:"Vendredi",t:"Appoint — endurance souple",k:7,dp:50,f:"recup",c:["45 à 50 min, terrain roulant","Allure de récupération"],w:"À sauter sans hésiter si la fatigue s'accumule."},
+  null,
+  {d:"Vendredi",t:"Appoint — endurance souple",k:8,dp:50,f:"recup",c:["50 à 55 min, terrain roulant","Allure de récupération"],w:"Semaine chargée : si le mercredi a laissé des traces, remplace par du repos."},
+  {d:"Vendredi",t:"Appoint — endurance souple",k:8,dp:50,f:"recup",c:["50 min, terrain roulant","Allure de récupération stricte"],w:"Semaine du pic. Cette séance passe après la répétition générale de dimanche : si tu dois choisir, garde le dimanche frais."},
+  {d:"Vendredi",t:"Appoint — endurance souple",k:6,dp:50,f:"recup",c:["45 min, terrain roulant"],w:""},
+  {d:"Vendredi",t:"Repos",k:0,dp:0,f:"recup",c:["Pas de séance"],w:"Semaine de course : le vendredi et le samedi sont des jours de repos complet."}
+ ],
+ laurie:[null,null,null,null,null,null,null,null]
+};
+let appoint=false;
+try{appoint=localStorage.getItem("ct_appoint")==="1"}catch(e){}
+
+function weekSessions(){
+  const s=PLAN[ath].w[wk].slice();
+  const ap=APPOINT[ath][wk];
+  if(appoint&&ap&&ap.k>0)s.splice(s.length-1,0,ap);
+  return s;
+}
+function weekVol(){
+  const p=PLAN[ath],ap=APPOINT[ath][wk];
+  const add=(appoint&&ap)?ap:{k:0,dp:0};
+  return [p.vol[wk]+add.k,p.dplus[wk]+add.dp];
+}
+
+const DEF={
+ edgar:{fond:6.3,tempo:5.5,seuil:5.1,recup:7.0,fc:190},
+ laurie:{fond:8.0,tempo:7.5,seuil:7.2,recup:8.5,fc:185}
+};
+
+let ath="edgar",wk=0,me=JSON.parse(JSON.stringify(DEF)),logs=[];
+try{const s=localStorage.getItem("ct_allures");if(s)me=JSON.parse(s);}catch(e){}
+try{const s=localStorage.getItem("ct_carnet");if(s)logs=JSON.parse(s);}catch(e){}
+
+function setAth(a){
+  ath=a;
+  wE.setAttribute("aria-pressed",a==="edgar");
+  wL.setAttribute("aria-pressed",a==="laurie");
+  render();
+}
+function setTab(t){
+  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("on",p.id===t));
+  [["plan",tPlan],["goal",tGoal],["me",tMe],["log",tLog]].forEach(function(x){x[1].setAttribute("aria-selected",x[0]===t)});
+  render();
+}
+function render(){drawBars();drawWeek();drawGoal();drawMe();drawLog();}
+
+function drawBars(){
+  const p=PLAN[ath],ap=APPOINT[ath];
+  const v=p.vol.map(function(x,i){return x+((appoint&&ap[i])?ap[i].k:0)});
+  const max=Math.max.apply(null,v);
+  bars.innerHTML=v.map(function(x,i){
+    return '<button style="height:'+Math.round(x/max*100)+'%" class="'+(i===5?"peak":"")+'"'+
+      ' aria-current="'+(i===wk)+'" aria-label="Semaine '+(i+1)+', '+x+' km"'+
+      ' onclick="wk='+i+';render()"></button>';}).join("");
+}
+
+function drawWeek(){
+  const s=weekSessions(),v=weekVol();
+  wkTitle.textContent="Semaine "+(wk+1);
+  wkDates.textContent=DATES[wk];
+  wkKm.textContent=v[0]+" km";
+  wkD.textContent=v[1]+" m";
+  const lg=s[s.length-1];
+  wkLong.textContent=lg.f==="course"?"course":lg.k+" km";
+  let tag="";
+  if(wk===3)tag='<span class="tag light">Semaine allégée</span>';
+  if(wk===5)tag='<span class="tag peak">Pic de charge</span>';
+  if(wk===7)tag='<span class="tag race">Affûtage et course</span>';
+  wkTag.innerHTML=tag;
+  sessions.innerHTML=s.map(function(x,i){
+    const cls=x.race?"race":(x.key?"key":"");
+    const met=[];
+    if(x.k)met.push('<span class="num">'+x.k+' km</span>');
+    if(x.dp)met.push('<span class="num">'+x.dp+' m D+</span>');
+    met.push('<span class="num">'+dur(x)+'</span>');
+    return '<button class="session '+cls+'" onclick="openSheet('+i+')">'+
+      '<div class="day">'+x.d+'</div><div class="title">'+x.t+'</div>'+
+      '<div class="meta">'+met.join("")+'</div></button>';
+  }).join("");
+}
+
+function dur(x){
+  const a=me[ath];
+  if(x.f==="nat")return "30-40 min";
+  const map={fond:a.fond,tempo:a.tempo,seuil:a.tempo,cotes:a.fond,recup:a.recup,course:a.fond};
+  const base=map[x.f]||a.fond;
+  const m=Math.round(x.k*base+(x.dp/100)*5);
+  return m>=60?Math.floor(m/60)+"h"+String(m%60).padStart(2,"0"):m+" min";
+}
+
+function openSheet(i){
+  const x=weekSessions()[i],a=me[ath];
+  const zm={fond:["zone 2",.70,.80],tempo:["zone 3",.80,.88],seuil:["zone 4",.88,.94],
+    cotes:["zones 3-4",.80,.94],recup:["zone 1",.60,.70],course:["zones 2-3",.72,.85],nat:["zone 2",.70,.80]};
+  const z=zm[x.f];
+  const pm={fond:a.fond,tempo:a.tempo,seuil:a.seuil,cotes:a.fond,recup:a.recup,course:a.fond};
+  const pace=pm[x.f]||a.fond;
+  const mm=Math.floor(pace),ss=String(Math.round((pace-mm)*60)).padStart(2,"0");
+  sheetIn.innerHTML=
+    '<div class="sheet-top"><div><h3>'+x.t+'</h3><div class="sub">'+x.d+' · semaine '+(wk+1)+'</div></div>'+
+    '<button onclick="closeSheet()" aria-label="Fermer">×</button></div>'+
+    '<div class="figs">'+
+      '<div class="fig"><b class="num">'+(x.k?x.k+" km":"—")+'</b><span>distance</span></div>'+
+      '<div class="fig"><b class="num">'+(x.dp?x.dp+" m":"—")+'</b><span>dénivelé positif</span></div>'+
+      '<div class="fig"><b class="num">'+dur(x)+'</b><span>durée estimée</span></div></div>'+
+    '<div class="block"><h4>Déroulé</h4><ul>'+x.c.map(function(l){return "<li>"+l+"</li>"}).join("")+'</ul></div>'+
+    (x.f!=="nat"?'<div class="block"><h4>Allure et fréquence cardiaque</h4><p><span class="num">'+mm+"'"+ss+
+      '/km</span> sur plat · '+z[0]+', <span class="num">'+Math.round(a.fc*z[1])+"–"+Math.round(a.fc*z[2])+' bpm</span></p></div>':"")+
+    (x.w?'<div class="warn">'+x.w+'</div>':"");
+  sheet.classList.add("on");
+}
+function closeSheet(){sheet.classList.remove("on")}
+
+function drawGoal(){
+  const g=GOAL[ath];
+  goal.innerHTML='<h3 class="sec">'+g.race+'</h3>'+
+   '<p style="font-size:.8rem;color:var(--ink-soft);margin-bottom:.8rem">Distance équivalente sur plat : <b class="num">'+g.eq+
+   ' km</b>. Le dénivelé se convertit à raison de 100 m pour 1 km.</p>'+
+   g.sc.map(function(s,i){return '<div class="scen '+(i===1?"pick":"")+'"><div class="scen-top"><b>'+s[0]+
+     '</b><span class="t num">'+s[1]+'</span></div><p>'+s[2]+'</p></div>'}).join("")+
+   '<div class="warn" style="margin-top:.6rem">'+g.warn+'</div>'+
+   '<h3 class="sec">Points de décision</h3><div class="chk">'+
+   g.chk.map(function(c){return '<div class="chk-item"><b>'+c[0]+'</b><p>'+c[1]+'</p></div>'}).join("")+'</div>'+
+   '<h3 class="sec">Ce que dira la semaine 6</h3>'+
+   '<p style="font-size:.8rem;color:var(--ink-soft);margin-bottom:.5rem">'+g.tblNote+'</p>'+
+   g.tbl.map(function(r){return '<div class="zrow"><span class="num">'+r[0]+'</span><b class="num">'+r[1]+'</b></div>'}).join("");
+}
+
+function drawMe(){
+  const a=me[ath];
+  aFond.value=a.fond;aTempo.value=a.tempo;aSeuil.value=a.seuil;aRecup.value=a.recup;aFc.value=a.fc;
+  rythme.innerHTML=APPOINT[ath][0]?
+    '<h3 class="sec">Rythme de la semaine</h3>'+
+    '<div class="pair"><button class="opt'+(appoint?"":" on")+'" onclick="setAppoint(false)">'+
+      '<b>3 séances</b><span>lundi, mercredi, jeudi</span></button>'+
+    '<button class="opt'+(appoint?" on":"")+'" onclick="setAppoint(true)">'+
+      '<b>4 séances</b><span>+ appoint le vendredi</span></button></div>'+
+    '<p style="font-size:.75rem;color:var(--ink-soft);margin-top:.4rem">'+
+    'La sortie longue du dimanche s\'ajoute dans les deux cas. L\'appoint est une endurance souple : '+
+    'il ajoute du volume aérobie sans intensité, et se saute au premier signal de la jambe gauche.</p>':"";
+  const Z=[["Zone 1 · récupération",.60,.70],["Zone 2 · fondamental",.70,.80],
+           ["Zone 3 · tempo",.80,.88],["Zone 4 · seuil",.88,.94],["Zone 5 · maximale",.94,1]];
+  zones.innerHTML='<h3 class="sec">Zones de fréquence cardiaque</h3>'+
+    Z.map(function(z){return '<div class="zrow"><span>'+z[0]+'</span><b class="num">'+
+      Math.round(a.fc*z[1])+"–"+Math.round(a.fc*z[2])+'</b></div>'}).join("")+
+    '<p style="font-size:.75rem;color:var(--ink-soft);margin-top:.6rem">Fréquence maximale estimée. Elle s\'affine sur la dernière répétition d\'une séance de côtes.</p>';
+}
+function setAppoint(v){
+  appoint=v;
+  try{localStorage.setItem("ct_appoint",v?"1":"0")}catch(e){}
+  toast(v?"Quatre séances en semaine":"Trois séances en semaine");
+  render();
+}
+function saveMe(){
+  const a=me[ath];
+  a.fond=parseFloat(aFond.value)||a.fond;
+  a.tempo=parseFloat(aTempo.value)||a.tempo;
+  a.seuil=parseFloat(aSeuil.value)||a.seuil;
+  a.recup=parseFloat(aRecup.value)||a.recup;
+  a.fc=parseInt(aFc.value)||a.fc;
+  try{localStorage.setItem("ct_allures",JSON.stringify(me))}catch(e){}
+  toast("Allures enregistrées");render();
+}
+
+function saveLog(){
+  if(!lDate.value||!lType.value){toast("Il manque la date ou le type de séance");return}
+  logs.push({dt:lDate.value,ty:lType.value,km:lKm.value,mn:lMin.value,dp:lD.value,fc:lFc.value,no:lNote.value,a:ath});
+  try{localStorage.setItem("ct_carnet",JSON.stringify(logs))}catch(e){}
+  [lDate,lKm,lMin,lD,lFc,lNote].forEach(function(f){f.value=""});lType.value="";
+  toast("Séance enregistrée");drawLog();
+}
+function drawLog(){
+  const l=logs.filter(function(x){return x.a===ath}).slice().reverse();
+  logList.innerHTML=l.length?l.map(function(x){
+    const m=[];if(x.km)m.push(x.km+" km");if(x.mn)m.push(x.mn+" min");
+    if(x.dp)m.push(x.dp+" m D+");if(x.fc)m.push(x.fc+" bpm");
+    return '<div class="log"><b>'+x.ty+'</b> · <span class="num">'+x.dt+'</span>'+
+      '<div class="meta num">'+m.join(" · ")+'</div>'+
+      (x.no?'<div class="meta">'+x.no+'</div>':"")+'</div>';
+  }).join(""):'<div class="empty">Aucune séance enregistrée. La première apparaîtra ici.</div>';
+}
+
+/* ---------- Suunto ---------- */
+let last=null;
+
+pick.addEventListener("change",function(e){if(e.target.files.length)readFile(e.target.files[0])});
+["dragenter","dragover"].forEach(function(ev){
+  drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.add("over")})});
+["dragleave","drop"].forEach(function(ev){
+  drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.remove("over")})});
+drop.addEventListener("drop",function(e){
+  if(e.dataTransfer.files.length)readFile(e.dataTransfer.files[0])});
+
+function readFile(f){
+  const r=new FileReader();
+  r.onerror=function(){fail("Le fichier n'a pas pu être lu.")};
+  r.onload=function(e){
+    let j;
+    try{j=JSON.parse(e.target.result)}
+    catch(err){return fail("Ce fichier n'est pas du JSON valide.")}
+    try{parseSuunto(j)}
+    catch(err){fail("Structure inattendue : "+err.message)}
+  };
+  r.readAsText(f);
+}
+function fail(m){
+  suuntoOut.innerHTML='<div class="warn">'+m+' Exporte la séance depuis l\'application Suunto au format JSON, puis réessaie.</div>';
+}
+
+function findLog(j){
+  if(j&&j.DeviceLog)return j.DeviceLog;
+  if(j&&j.data&&j.data.DeviceLog)return j.data.DeviceLog;
+  return null;
+}
+
+function parseSuunto(j){
+  const dl=findLog(j);
+  if(!dl||!dl.Header)throw new Error("en-tête introuvable");
+  const h=dl.Header;
+  const km=(h.Distance||0)/1000;
+  const sec=h.Duration||0;
+  const asc=Math.round(h.Ascent||0), desc=Math.round(h.Descent||0);
+  const hrA=h.HR&&h.HR.Avg?Math.round(h.HR.Avg*(h.HR.Avg<10?60:1)):null;
+  const hrM=h.HR&&h.HR.Max?Math.round(h.HR.Max*(h.HR.Max<10?60:1)):null;
+  const pace=km>0?(sec/60)/km:0;
+  const dt=h.DateTime?new Date(h.DateTime):null;
+
+  last={km:km,sec:sec,asc:asc,desc:desc,hrA:hrA,pace:pace,
+        date:dt?dt.toISOString().slice(0,10):""};
+
+  const laps=collectLaps(dl);
+  suuntoOut.innerHTML=
+    '<div class="weekhead"><h2>Séance importée</h2><div class="dates num">'+
+      (dt?dt.toLocaleDateString("fr-FR"):"date inconnue")+'</div></div>'+
+    '<div class="figs">'+
+      fig(km.toFixed(1)+" km","distance")+
+      fig(asc+" m","dénivelé positif")+
+      fig(hms(sec),"durée")+
+      fig(mmss(pace),"allure moyenne")+
+      fig(desc+" m","dénivelé négatif")+
+      fig(hrA?hrA+" bpm":"—","fréquence moyenne")+
+    '</div>'+
+    compare(km,asc,sec)+
+    splitsHtml(laps,pace)+
+    zoneHtml(hrA,hrM)+
+    '<button class="act" onclick="toLog()" style="margin-top:1rem">Ajouter au carnet</button>';
+}
+
+function fig(v,l){return '<div class="fig"><b class="num">'+v+'</b><span>'+l+'</span></div>'}
+
+function collectLaps(dl){
+  const out=[],s=dl.Samples||[];
+  for(let i=0;i<s.length;i++){
+    const w=s[i]&&s[i].Window;
+    if(!w)continue;
+    const ty=(w.Type||"").toLowerCase();
+    if(ty.indexOf("lap")<0)continue;
+    const d=(w.Distance||0)/1000, t=w.Duration||0;
+    if(d<=0||t<=0)continue;
+    let hr=null;
+    if(Array.isArray(w.HR)&&w.HR[0]&&w.HR[0].Avg)hr=Math.round(w.HR[0].Avg*(w.HR[0].Avg<10?60:1));
+    else if(w.HR&&w.HR.Avg)hr=Math.round(w.HR.Avg*(w.HR.Avg<10?60:1));
+    out.push({d:d,t:t,asc:Math.round(w.Ascent||0),hr:hr,pace:(t/60)/d});
+  }
+  return out;
+}
+
+function splitsHtml(l,avg){
+  if(!l.length)return '<div class="block"><h4>Tours par kilomètre</h4><p style="font-size:.85rem;color:var(--ink-soft)">Ce fichier ne contient pas de tours automatiques. Active le tour au kilomètre sur la montre pour les obtenir.</p></div>';
+  const worst=Math.max.apply(null,l.map(function(x){return x.pace}));
+  return '<h3 class="sec">Tours par kilomètre</h3>'+l.map(function(x,i){
+    const w=Math.max(6,Math.round(100-(x.pace/worst)*70));
+    const slow=x.pace>avg*1.1?" slow":"";
+    return '<div class="split"><span class="kmno num">'+(i+1)+'</span>'+
+      '<span class="bar"><i class="'+slow+'" style="width:'+w+'%"></i></span>'+
+      '<span class="val num">'+mmss(x.pace)+
+      (x.asc?'<em>'+x.asc+' m</em>':"")+
+      (x.hr?'<em>'+x.hr+'</em>':"")+'</span></div>';
+  }).join("")+
+  '<p style="font-size:.75rem;color:var(--ink-soft);margin-top:.5rem">Les tours en ocre sont plus de 10 % au-dessus de l\'allure moyenne, ce qui correspond en général aux portions montantes.</p>';
+}
+
+function compare(km,asc,sec){
+  const s=weekSessions();
+  let best=null,gap=1e9;
+  for(let i=0;i<s.length;i++){
+    if(!s[i].k)continue;
+    const g=Math.abs(s[i].k-km)+Math.abs(s[i].dp-asc)/100;
+    if(g<gap){gap=g;best=s[i]}
+  }
+  if(!best||gap>12)return "";
+  const dk=km-best.k, dd=asc-best.dp;
+  return '<h3 class="sec">Comparaison au plan</h3>'+
+    '<p style="font-size:.8rem;color:var(--ink-soft);margin-bottom:.5rem">Séance la plus proche : '+
+    best.d.toLowerCase()+' de la semaine '+(wk+1)+', '+best.t+'.</p>'+
+    row("Distance",best.k+" km",km.toFixed(1)+" km",dk,1.5)+
+    row("Dénivelé positif",best.dp+" m",asc+" m",dd,80)+
+    row("Durée estimée",dur(best),hms(sec),0,null);
+}
+function row(lab,prev,fait,ecart,tol){
+  let cls="",txt="";
+  if(tol!==null){
+    cls=Math.abs(ecart)<=tol?"ok":"off";
+    txt=(ecart>0?"+":"")+(Math.abs(ecart)<10?ecart.toFixed(1):Math.round(ecart));
+  }
+  return '<div class="cmp"><span>'+lab+'</span><span class="num">'+prev+' → '+fait+
+    '</span><span class="'+cls+' num">'+txt+'</span></div>';
+}
+
+function zoneHtml(hrA,hrM){
+  if(!hrA)return "";
+  const a=me[ath],p=hrA/a.fc;
+  let z="zone 1";
+  if(p>=.94)z="zone 5";else if(p>=.88)z="zone 4";
+  else if(p>=.80)z="zone 3";else if(p>=.70)z="zone 2";
+  let msg='Fréquence moyenne en '+z+', soit '+Math.round(p*100)+" % de ta fréquence maximale.";
+  if(z==="zone 4"||z==="zone 5")msg+=" Pour une sortie longue ou une endurance fondamentale, c'est trop haut : l'intérêt de ces séances tient à leur allure basse.";
+  return '<div class="block" style="margin-top:1rem"><h4>Lecture cardiaque</h4><p style="font-size:.85rem">'+msg+
+    (hrM?' Maximale relevée : <span class="num">'+hrM+' bpm</span>.':"")+'</p></div>';
+}
+
+function toLog(){
+  if(!last)return;
+  logs.push({dt:last.date,ty:"Importée",km:last.km.toFixed(1),
+    mn:Math.round(last.sec/60),dp:last.asc,fc:last.hrA||"",no:"",a:ath});
+  try{localStorage.setItem("ct_carnet",JSON.stringify(logs))}catch(e){}
+  toast("Séance ajoutée au carnet");drawLog();
+}
+
+function hms(s){
+  const h=Math.floor(s/3600),m=Math.round((s%3600)/60);
+  return h?h+"h"+String(m).padStart(2,"0"):m+" min";
+}
+function mmss(p){
+  if(!p||!isFinite(p))return "—";
+  const m=Math.floor(p);
+  return m+"'"+String(Math.round((p-m)*60)).padStart(2,"0");
+}
+
+function toast(t){
+  const d=document.createElement("div");d.className="toast";d.textContent=t;
+  document.body.appendChild(d);setTimeout(function(){d.remove()},2200);
+}
+
+render();
+</script>
+</body>
+</html>
