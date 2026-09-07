@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#2c5aa0">
+    <title>Coach Trail v2</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { width: 100%; height: 100vh; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #1a1a1a;
+            overflow: hidden;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+            background: #f5f5f5;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a70 100%);
+            color: white;
+            padding: 1rem;
+            padding-top: calc(0.5rem + env(safe-area-inset-top));
+            text-align: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .header h1 { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
+        .header p { font-size: 11px; opacity: 0.8; }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 1rem;
+            padding-bottom: 1rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 1rem;
+            background: white;
+            padding: 8px;
+            border-radius: 10px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .tabs::-webkit-scrollbar { display: none; }
+        .tab-btn {
+            flex-shrink: 0;
+            padding: 6px 12px;
+            border: none;
+            background: #e8e8e8;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #666;
+            white-space: nowrap;
+            min-height: 32px;
+        }
+        .tab-btn.active {
+            background: #2c5aa0;
+            color: white;
+        }
+
+        .athlete-select {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1rem;
+        }
+        .athlete-btn {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            color: #666;
+        }
+        .athlete-btn.active {
+            background: #2c5aa0;
+            color: white;
+            border-color: #2c5aa0;
+        }
+
+        .view { display: none; }
+        .view.active { display: block; }
+
+        .card {
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .card h2 { font-size: 14px; font-weight: 600; margin-bottom: 0.8rem; color: #2c5aa0; }
+        .card h3 { font-size: 12px; font-weight: 600; margin-bottom: 0.5rem; color: #333; }
+
+        .form-group {
+            margin-bottom: 0.6rem;
+        }
+        .form-group label {
+            display: block;
+            font-size: 10px;
+            font-weight: 500;
+            margin-bottom: 3px;
+            color: #666;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: inherit;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 36px;
+        }
+        .btn-primary {
+            background: #2c5aa0;
+            color: white;
+        }
+        .btn-secondary {
+            background: white;
+            color: #2c5aa0;
+            border: 1px solid #ddd;
+        }
+
+        .stat-box {
+            background: #f9f9f9;
+            padding: 8px;
+            border-radius: 8px;
+            border-left: 3px solid #2c5aa0;
+            margin-bottom: 8px;
+        }
+        .stat-label { font-size: 9px; color: #999; font-weight: 500; }
+        .stat-value { font-size: 12px; color: #2c5aa0; font-weight: 600; margin-top: 2px; }
+
+        .drop-zone {
+            border: 2px dashed #2c5aa0;
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+            background: #f9f9f9;
+            margin-bottom: 1rem;
+            cursor: pointer;
+        }
+        .drop-zone p { font-size: 12px; color: #666; margin: 3px 0; }
+
+        .split-row {
+            background: #f9f9f9;
+            padding: 8px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            border-left: 3px solid #2c5aa0;
+            font-size: 10px;
+            line-height: 1.4;
+        }
+
+        .alert {
+            padding: 8px;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            font-size: 11px;
+        }
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-warning { background: #fff3cd; color: #856404; }
+        .alert-error { background: #f8d7da; color: #721c24; }
+
+        input[type="file"] { display: none; }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 1rem;
+        }
+        .comparison-box {
+            background: #f9f9f9;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 10px;
+        }
+        .comparison-label { color: #999; font-weight: 500; }
+        .comparison-value { font-size: 11px; color: #2c5aa0; font-weight: 600; margin-top: 3px; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1>🏃 Coach Trail v2</h1>
+            <p>Saint-Étienne Urban Trail - 1er novembre</p>
+        </div>
+
+        <div class="content">
+            <div class="athlete-select">
+                <button class="athlete-btn active" onclick="switchAthlete('edgar')">Edgar</button>
+                <button class="athlete-btn" onclick="switchAthlete('laurie')">Laurie</button>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchView('profil')">Profil</button>
+                <button class="tab-btn" onclick="switchView('coach')">Coach</button>
+                <button class="tab-btn" onclick="switchView('program')">Programme</button>
+                <button class="tab-btn" onclick="switchView('suunto')">Suunto++</button>
+                <button class="tab-btn" onclick="switchView('retours')">Retours</button>
+            </div>
+
+            <!-- PROFIL -->
+            <div id="profil" class="view active">
+                <div class="card">
+                    <h2 id="profileTitle">Profil Edgar</h2>
+                    <p style="font-size:10px; color:#999; margin-bottom:1rem;">Allures en terrain PLAT (ajuste selon tes mesures réelles)</p>
+                    
+                    <div class="profile-grid">
+                        <div class="form-group">
+                            <label>Fondamental (min/km)</label>
+                            <input type="number" id="pFondamental" step="0.1" placeholder="6:30">
+                        </div>
+                        <div class="form-group">
+                            <label>Tempo (min/km)</label>
+                            <input type="number" id="pTempo" step="0.1" placeholder="6:00">
+                        </div>
+                        <div class="form-group">
+                            <label>Côtes (min/km)</label>
+                            <input type="number" id="pCotes" step="0.1" placeholder="8:00">
+                        </div>
+                        <div class="form-group">
+                            <label>Récup (min/km)</label>
+                            <input type="number" id="pRecup" step="0.1" placeholder="7:30">
+                        </div>
+                    </div>
+
+                    <div id="profileLaurieExtra" style="display:none;">
+                        <div class="form-group">
+                            <label>Natation (km/h)</label>
+                            <input type="number" id="pNatation" step="0.1" placeholder="2">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>FC Max (bpm)</label>
+                        <input type="number" id="pFCMax" placeholder="190">
+                    </div>
+
+                    <button class="btn btn-primary" onclick="saveProfile()">Sauvegarder</button>
+                </div>
+
+                <div class="card" id="profileStats"></div>
+            </div>
+
+            <!-- COACH -->
+            <div id="coach" class="view">
+                <div class="card" id="coachContent"></div>
+            </div>
+
+            <!-- PROGRAMME -->
+            <div id="program" class="view">
+                <div class="card">
+                    <div style="display:flex; gap:8px; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                        <button class="btn btn-secondary" onclick="prevWeek()" style="flex:0.3;">◀</button>
+                        <div style="font-size:13px; font-weight:600; color:#2c5aa0;">Semaine <span id="weekNum">1</span></div>
+                        <button class="btn btn-secondary" onclick="nextWeek()" style="flex:0.3;">▶</button>
+                    </div>
+                    <div id="programContent"></div>
+                </div>
+            </div>
+
+            <!-- SUUNTO++ -->
+            <div id="suunto" class="view">
+                <div class="card">
+                    <h2>📱 Analyseur Suunto++</h2>
+                    
+                    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                        <p><strong>📁 Glisse ton JSON Suunto</strong></p>
+                        <p style="font-size:10px;">ou clique pour sélectionner</p>
+                    </div>
+                    <input type="file" id="fileInput" accept=".json">
+
+                    <div id="suuntoAlert"></div>
+                    <div id="suuntoResult" style="display:none;">
+                        <div id="suuntoComparison"></div>
+                        <div id="suuntoSplits"></div>
+                        <div id="suuntoAlerts"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RETOURS -->
+            <div id="retours" class="view">
+                <div class="card">
+                    <h2>Ajouter retour</h2>
+                    
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="fbDate">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Type de séance</label>
+                        <select id="fbType">
+                            <option value="">Sélectionner...</option>
+                            <option value="Fondamental">Fondamental</option>
+                            <option value="Tempo">Tempo</option>
+                            <option value="Côtes">Côtes</option>
+                            <option value="Récup">Récupération</option>
+                            <option value="Longue sortie">Longue sortie</option>
+                            <option value="Natation">Natation</option>
+                        </select>
+                    </div>
+
+                    <div class="profile-grid">
+                        <div class="form-group">
+                            <label>Distance (km)</label>
+                            <input type="number" id="fbDistance" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>Temps (min)</label>
+                            <input type="number" id="fbTime">
+                        </div>
+                    </div>
+
+                    <div class="profile-grid">
+                        <div class="form-group">
+                            <label>FC moy (bpm)</label>
+                            <input type="number" id="fbFC">
+                        </div>
+                        <div class="form-group">
+                            <label>Ressenti</label>
+                            <select id="fbFeeling">
+                                <option value="Excellent">Excellent</option>
+                                <option value="Bon" selected>Bon</option>
+                                <option value="OK">OK</option>
+                                <option value="Fatigué">Fatigué</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <input type="text" id="fbNotes" placeholder="Douleurs, observations...">
+                    </div>
+
+                    <button class="btn btn-primary" onclick="saveFeedback()">Soumettre</button>
+                </div>
+
+                <div class="card">
+                    <h2>Historique</h2>
+                    <div id="retoursList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentAthlete = 'edgar';
+        let currentWeek = 1;
+        let profiles = {
+            edgar: { fondamental: 6.5, tempo: 6.0, cotes: 8.0, recup: 7.5, fcMax: 190 },
+            laurie: { fondamental: 8.0, tempo: 7.5, cotes: 9.5, recup: 8.5, natation: 2, fcMax: 185 }
+        };
+        let suuntoData = null;
+        let allFeedback = [];
+
+        const programs = {
+            edgar: {
+                1: {lundi: 'Tempo + Intervalle - 10-14 km', mercredi: 'Côtes + Renfo - 900-1200m D+', jeudi: 'Récup - 8-10 km', dimanche: 'Longue sortie - 15 km'},
+                2: {lundi: 'Tempo + Intervalle - 10.5 km', mercredi: 'Côtes + Renfo - 900-1300m D+', jeudi: 'Récup - 8-10 km', dimanche: 'Longue sortie - 17 km'},
+                3: {lundi: 'Tempo + Intervalle - 11 km', mercredi: 'Côtes + Renfo - 1000-1400m D+', jeudi: 'Récup - 8-10 km', dimanche: 'Longue sortie - 18-19 km'},
+                4: {lundi: 'Tempo Seuil - 11 km', mercredi: 'Côtes + Renfo - 1200-1500m D+', jeudi: 'Récup - 9-11 km', dimanche: 'Longue sortie - 20 km'},
+                5: {lundi: 'Tempo Seuil - 11.5 km', mercredi: 'Côtes + Renfo - 1300-1600m D+', jeudi: 'Récup - 9-11 km', dimanche: 'Longue sortie - 21-22 km'},
+                6: {lundi: 'Tempo Seuil - 12 km', mercredi: 'Côtes + Renfo - 1400-1700m D+', jeudi: 'Récup - 9-11 km', dimanche: '🔑 LONGUE SORTIE - 24-26 km (test nutrition)'},
+                7: {lundi: 'Tempo Modéré - 11 km', mercredi: 'Côtes Courtes - 900-1100m D+', jeudi: 'Récup - 8-10 km', dimanche: 'Longue sortie - 25-26 km'},
+                8: {lundi: 'Petit Tempo - 8 km', mercredi: 'Côtes Courtes - 600-800m D+', jeudi: 'OFF', vendredi: 'VOYAGE à Saint-Étienne'},
+                9: {jour1: 'REPOS', jour2: 'Marche 30 min facile', jour3: 'REPOS', dimanche: '10 km facile'},
+                10: {lundi: 'Petit Fartlek - 7 km', mercredi: 'Marche/vélo - 45 min', jeudi: 'OFF', dimanche: 'Longue sortie - 12-13 km'}
+            },
+            laurie: {
+                1: {jour1: 'Endurance + Tempo - 8-9 km', jour2: 'Côtes + Renfo - 600-800m D+', jour3: 'Natation - 30-35 min', dimanche: 'Longue sortie - 12 km'},
+                2: {jour1: 'Endurance + Tempo - 9 km', jour2: 'Côtes + Renfo - 700-900m D+', jour3: 'Natation - 30-35 min', dimanche: 'Longue sortie - 13-14 km'},
+                3: {jour1: 'Endurance + Tempo - 9.5 km', jour2: 'Côtes + Renfo - 800-1000m D+', jour3: 'Natation - 30-35 min', dimanche: 'Longue sortie - 15 km'},
+                4: {jour1: 'Endurance Soutenue - 10 km', jour2: 'Côtes + Renfo - 900-1100m D+', jour3: 'Natation - 35-40 min', dimanche: 'Longue sortie - 17 km'},
+                5: {jour1: 'Tempo Modéré - 10 km', jour2: 'Côtes + Renfo - 1000-1200m D+', jour3: 'Natation - 35-40 min', dimanche: 'Longue sortie - 18-19 km'},
+                6: {jour1: 'Tempo Soutenu - 10.5 km', jour2: 'Côtes + Renfo - 1100-1300m D+', jour3: 'Natation - 40 min', dimanche: '🔑 LONGUE SORTIE - 20-21 km (test nutrition)'},
+                7: {jour1: 'Tempo Léger - 9 km', jour2: 'Côtes Courtes - 700-900m D+', jour3: 'Natation - 30-35 min', dimanche: 'Longue sortie - 21 km'},
+                8: {jour1: 'Petit Tempo - 7 km', jour2: 'Côtes Courtes - 500-700m D+', jour3: 'OFF', vendredi: 'VOYAGE à Saint-Étienne'},
+                9: {jour1: 'REPOS', jour2: 'Marche 30 min ou natation', jour3: 'REPOS', dimanche: '8 km facile'},
+                10: {jour1: 'Fartlek - 6-7 km', jour2: 'Natation/marche - 35-40 min', jour3: 'OFF', dimanche: 'Longue sortie - 11-12 km'}
+            }
+        };
+
+        loadProfiles();
+        loadFeedback();
+        setupDropZone();
+        updateDisplay();
+
+        function switchAthlete(athlete) {
+            currentAthlete = athlete;
+            document.querySelectorAll('.athlete-btn').forEach((btn, i) => {
+                btn.classList.toggle('active', (i === 0 && athlete === 'edgar') || (i === 1 && athlete === 'laurie'));
+            });
+            updateDisplay();
+        }
+
+        function switchView(view) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(view).classList.add('active');
+            document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+                const views = ['profil', 'coach', 'program', 'suunto', 'retours'];
+                btn.classList.toggle('active', views[i] === view);
+            });
+            if (view === 'program') updateProgram();
+            if (view === 'retours') loadFeedback();
+        }
+
+        function updateDisplay() {
+            const profile = profiles[currentAthlete];
+            document.getElementById('profileTitle').textContent = `Profil ${currentAthlete === 'edgar' ? 'Edgar' : 'Laurie'}`;
+            
+            document.getElementById('pFondamental').value = profile.fondamental;
+            document.getElementById('pTempo').value = profile.tempo;
+            document.getElementById('pCotes').value = profile.cotes;
+            document.getElementById('pRecup').value = profile.recup;
+            document.getElementById('pFCMax').value = profile.fcMax;
+            
+            if (currentAthlete === 'laurie') {
+                document.getElementById('profileLaurieExtra').style.display = 'block';
+                document.getElementById('pNatation').value = profile.natation;
+            } else {
+                document.getElementById('profileLaurieExtra').style.display = 'none';
+            }
+
+            updateProfileStats();
+            updateCoachDisplay();
+            currentWeek = 1;
+            updateProgram();
+            loadFeedback();
+        }
+
+        function updateProfileStats() {
+            const p = profiles[currentAthlete];
+            let html = `<h3>📊 Zones FC</h3>`;
+            const fcMax = p.fcMax;
+            html += `
+                <div class="stat-box">
+                    <div class="stat-label">Z1 Fondamental (60-75%)</div>
+                    <div class="stat-value">${Math.round(fcMax*0.6)} - ${Math.round(fcMax*0.75)} bpm</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Z2 Tempo (75-85%)</div>
+                    <div class="stat-value">${Math.round(fcMax*0.75)} - ${Math.round(fcMax*0.85)} bpm</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Z3 Seuil (85-95%)</div>
+                    <div class="stat-value">${Math.round(fcMax*0.85)} - ${Math.round(fcMax*0.95)} bpm</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Z4 Intervalle (95-100%)</div>
+                    <div class="stat-value">${Math.round(fcMax*0.95)} - ${fcMax} bpm</div>
+                </div>
+            `;
+            document.getElementById('profileStats').innerHTML = html;
+        }
+
+        function updateCoachDisplay() {
+            const names = { edgar: 'Edgar', laurie: 'Laurie' };
+            const objectives = {
+                edgar: { short: '42 km - 1er nov', long: '60 km montagne - Été 2027' },
+                laurie: { short: '20 km - 1er nov', long: '40 km - Été 2027' }
+            };
+            
+            const obj = objectives[currentAthlete];
+            let html = `
+                <h2>${names[currentAthlete]}</h2>
+                <div class="stat-box">
+                    <div class="stat-label">Objectif court terme</div>
+                    <div class="stat-value">${obj.short}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Objectif long terme</div>
+                    <div class="stat-value">${obj.long}</div>
+                </div>
+            `;
+            document.getElementById('coachContent').innerHTML = html;
+        }
+
+        function saveProfile() {
+            const p = profiles[currentAthlete];
+            p.fondamental = parseFloat(document.getElementById('pFondamental').value) || p.fondamental;
+            p.tempo = parseFloat(document.getElementById('pTempo').value) || p.tempo;
+            p.cotes = parseFloat(document.getElementById('pCotes').value) || p.cotes;
+            p.recup = parseFloat(document.getElementById('pRecup').value) || p.recup;
+            p.fcMax = parseInt(document.getElementById('pFCMax').value) || p.fcMax;
+            if (currentAthlete === 'laurie') {
+                p.natation = parseFloat(document.getElementById('pNatation').value) || p.natation;
+            }
+            
+            localStorage.setItem('coach_profiles', JSON.stringify(profiles));
+            updateProfileStats();
+            showAlert('✅ Profil sauvegardé!');
+        }
+
+        function loadProfiles() {
+            const stored = localStorage.getItem('coach_profiles');
+            if (stored) {
+                profiles = JSON.parse(stored);
+            } else {
+                localStorage.setItem('coach_profiles', JSON.stringify(profiles));
+            }
+        }
+
+        function setupDropZone() {
+            const dropZone = document.getElementById('dropZone');
+            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('active'); });
+            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('active'));
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('active');
+                if (e.dataTransfer.files.length) parseSuunto(e.dataTransfer.files[0]);
+            });
+            document.getElementById('fileInput').addEventListener('change', (e) => {
+                if (e.target.files.length) parseSuunto(e.target.files[0]);
+            });
+        }
+
+        function parseSuunto(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    const header = data.DeviceLog?.Header;
+                    if (!header) throw new Error('Format invalide');
+                    
+                    suuntoData = {
+                        date: new Date(header.DateTime).toLocaleDateString('fr-FR'),
+                        distance: (header.Distance / 1000).toFixed(2),
+                        ascent: header.Ascent || 0,
+                        descent: header.Descent ? header.Descent.toFixed(0) : 0,
+                        duration: header.Duration || 0,
+                        hrAvg: header.HR?.Avg ? Math.round(header.HR.Avg) : '-',
+                        hrMax: header.HR?.Max ? Math.round(header.HR.Max) : '-',
+                        speedAvg: header.Speed?.Avg ? (header.Speed.Avg * 3.6).toFixed(2) : '-',
+                        windows: data.DeviceLog?.Samples || []
+                    };
+
+                    displaySuuntoAnalysis();
+                } catch (err) {
+                    document.getElementById('suuntoAlert').innerHTML = `<div class="alert alert-error">❌ ${err.message}</div>`;
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function displaySuuntoAnalysis() {
+            const profile = profiles[currentAthlete];
+            const data = suuntoData;
+            
+            // Comparaison réalisé vs prévu
+            const realPace = (data.duration / 60) / parseFloat(data.distance);
+            let compHtml = `<h3>📊 Analyse</h3><div class="comparison">
+                <div class="comparison-box">
+                    <div class="comparison-label">Distance</div>
+                    <div class="comparison-value">${data.distance} km</div>
+                </div>
+                <div class="comparison-box">
+                    <div class="comparison-label">D+ / D-</div>
+                    <div class="comparison-value">${data.ascent}m / ${data.descent}m</div>
+                </div>
+                <div class="comparison-box">
+                    <div class="comparison-label">Durée</div>
+                    <div class="comparison-value">${Math.round(data.duration/60)} min</div>
+                </div>
+                <div class="comparison-box">
+                    <div class="comparison-label">Allure moy</div>
+                    <div class="comparison-value">${realPace.toFixed(2)}'${Math.round((realPace % 1) * 60)}</div>
+                </div>
+                <div class="comparison-box">
+                    <div class="comparison-label">HR moy</div>
+                    <div class="comparison-value">${data.hrAvg} bpm</div>
+                </div>
+                <div class="comparison-box">
+                    <div class="comparison-label">HR max</div>
+                    <div class="comparison-value">${data.hrMax} bpm</div>
+                </div>
+            </div>`;
+
+            document.getElementById('suuntoComparison').innerHTML = compHtml;
+
+            // Splits par km
+            let splitsHtml = `<h3>📍 Splits par km</h3>`;
+            
+            // Parser les Windows (segments AutoLap)
+            const windows = data.windows.filter(w => w.Window && w.Window.Type === 'Autolap');
+            windows.forEach((w, idx) => {
+                const win = w.Window;
+                const dist = (win.Distance / 1000).toFixed(2);
+                const dur = Math.round(win.Duration / 60);
+                const ascent = win.Ascent || 0;
+                const descent = win.Descent || 0;
+                const pace = dur / parseFloat(dist);
+                const hr = win.HR[0]?.Avg ? Math.round(win.HR[0].Avg) : '-';
+                const speed = win.Speed[0]?.Avg ? (win.Speed[0].Avg * 3.6).toFixed(2) : '-';
+
+                splitsHtml += `
+                    <div class="split-row">
+                        <strong>Km ${idx + 1}:</strong> ${dist}km | ${dur}min | ${pace.toFixed(2)}'${Math.round((pace % 1) * 60)} | D+${ascent}m | HR ${hr}bpm
+                    </div>
+                `;
+            });
+
+            document.getElementById('suuntoSplits').innerHTML = splitsHtml;
+
+            // Alertes intelligentes
+            let alertsHtml = `<h3>⚠️ Alertes</h3>`;
+            let hasAlerts = false;
+
+            const tempoAllure = profile.tempo;
+            if (realPace > tempoAllure * 1.15) {
+                alertsHtml += `<div class="alert alert-warning">📉 Allure 15%+ plus lente que Tempo prévu (${realPace.toFixed(2)} vs ${tempoAllure})</div>`;
+                hasAlerts = true;
+            }
+
+            if (data.hrAvg > profile.fcMax * 0.95) {
+                alertsHtml += `<div class="alert alert-warning">❤️ FC très élevée: ${data.hrAvg}bpm (zone anaérobie)</div>`;
+                hasAlerts = true;
+            }
+
+            if (!hasAlerts) {
+                alertsHtml += `<div class="alert alert-success">✅ Séance bien équilibrée!</div>`;
+            }
+
+            document.getElementById('suuntoAlerts').innerHTML = alertsHtml;
+            document.getElementById('suuntoResult').style.display = 'block';
+        }
+
+        function updateProgram() {
+            const weekData = programs[currentAthlete][currentWeek];
+            document.getElementById('weekNum').textContent = currentWeek;
+            let html = '';
+            for (const [day, content] of Object.entries(weekData)) {
+                html += `<div class="stat-box"><strong>${day}:</strong> ${content}</div>`;
+            }
+            document.getElementById('programContent').innerHTML = html;
+        }
+
+        function nextWeek() {
+            if (currentWeek < 10) { 
+                currentWeek++;
+                updateProgram();
+            }
+        }
+
+        function prevWeek() {
+            if (currentWeek > 1) { 
+                currentWeek--;
+                updateProgram();
+            }
+        }
+
+        function saveFeedback() {
+            const date = document.getElementById('fbDate').value;
+            const type = document.getElementById('fbType').value;
+            const distance = document.getElementById('fbDistance').value;
+            
+            if (!date || !type || !distance) {
+                showAlert('⚠️ Remplis Date, Type et Distance');
+                return;
+            }
+            
+            const feedback = {
+                date, type, distance,
+                time: document.getElementById('fbTime').value,
+                fc: document.getElementById('fbFC').value,
+                feeling: document.getElementById('fbFeeling').value,
+                notes: document.getElementById('fbNotes').value,
+                athlete: currentAthlete,
+                id: Date.now()
+            };
+            
+            allFeedback.push(feedback);
+            localStorage.setItem('coach_retours', JSON.stringify(allFeedback));
+            showAlert('✅ Retour sauvegardé!');
+            
+            document.getElementById('fbDate').value = '';
+            document.getElementById('fbType').value = '';
+            document.getElementById('fbDistance').value = '';
+            document.getElementById('fbTime').value = '';
+            document.getElementById('fbFC').value = '';
+            document.getElementById('fbNotes').value = '';
+            document.getElementById('fbFeeling').value = 'Bon';
+            
+            loadFeedback();
+        }
+
+        function loadFeedback() {
+            try {
+                const stored = localStorage.getItem('coach_retours');
+                allFeedback = stored ? JSON.parse(stored) : [];
+            } catch (e) {}
+            
+            const athleteFeedback = allFeedback.filter(f => f.athlete === currentAthlete).reverse();
+            let html = '';
+            
+            athleteFeedback.forEach(fb => {
+                html += `
+                    <div class="stat-box">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                            <strong>${fb.date} - ${fb.type}</strong>
+                            <span style="background:#e8f0ff; color:#2c5aa0; padding:2px 6px; border-radius:4px; font-size:9px; font-weight:500;">${fb.feeling}</span>
+                        </div>
+                        <div style="font-size:10px; color:#666;">📏 ${fb.distance}km ${fb.time ? '| ⏱️ '+fb.time+'min' : ''} ${fb.fc ? '| ❤️ '+fb.fc+'bpm' : ''}</div>
+                        ${fb.notes ? `<div style="font-size:9px; color:#999; margin-top:3px;">📝 ${fb.notes}</div>` : ''}
+                    </div>
+                `;
+            });
+            
+            if (athleteFeedback.length === 0) {
+                html = '<p style="text-align:center; color:#999; font-size:11px;">Aucun retour</p>';
+            }
+            
+            document.getElementById('retoursList').innerHTML = html;
+        }
+
+        function showAlert(msg) {
+            const div = document.createElement('div');
+            div.innerHTML = msg;
+            div.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2c5aa0; color:white; padding:1rem; border-radius:10px; z-index:9999; font-size:12px';
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 2000);
+        }
+    </script>
+</body>
+</html>
