@@ -90,6 +90,13 @@ label{display:block;font-size:.7rem;color:var(--soft);font-weight:600;margin-bot
 input,select,textarea{width:100%;padding:.5rem;border:1px solid var(--rule);border-radius:6px;font-size:1rem;
  font-family:inherit;background:#fff;color:var(--ink);margin-bottom:.6rem;-webkit-appearance:none}
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.paceRow{display:flex;justify-content:space-between;align-items:center;
+ padding:.45rem 0;border-bottom:1px solid var(--rule)}
+.paceRow label{margin:0;font-size:.85rem;color:var(--ink);font-weight:600}
+.paceIn{display:flex;align-items:center;gap:.2rem}
+.paceIn input{width:3.1rem;margin:0;text-align:center;font-variant-numeric:tabular-nums;padding:.4rem .2rem}
+.paceIn input::-webkit-outer-spin-button,.paceIn input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.paceIn span{font-size:.85rem;color:var(--soft)}
 button.act{width:100%;padding:.7rem;border:none;border-radius:6px;background:var(--sapin);
  color:var(--paper);font-size:.9rem;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:.5rem}
 button.act.ghost{background:#fff;color:var(--sapin);border:1px solid var(--rule)}
@@ -186,13 +193,7 @@ h3.sec{font-size:.95rem;font-weight:700;margin:1.2rem 0 .6rem}
     <section id="me" class="panel">
       <div id="warnStore2"></div>
       <h3 class="sec">Allures de référence sur plat</h3>
-      <div class="pair">
-        <div><label for="aFond">Fondamental</label><input type="text" id="aFond" placeholder="6'18" inputmode="numeric"></div>
-        <div><label for="aTempo">Tempo</label><input type="text" id="aTempo" placeholder="5'30" inputmode="numeric"></div>
-        <div><label for="aSeuil">Seuil</label><input type="text" id="aSeuil" placeholder="5'06" inputmode="numeric"></div>
-        <div><label for="aRecup">Récupération</label><input type="text" id="aRecup" placeholder="7'00" inputmode="numeric"></div>
-      </div>
-      <p style="font-size:.72rem;color:var(--soft);margin-bottom:.6rem">Format minutes'secondes, par exemple 5'45.</p>
+      <div id="paces"></div>
       <label for="aFc">Fréquence cardiaque maximale (bpm)</label><input type="number" id="aFc">
       <button class="act" onclick="saveMe()">Enregistrer</button>
       <div id="rythme"></div>
@@ -671,16 +672,26 @@ function drawRenfo(){
 }
 
 /* ===== réglages ===== */
+var PACEF=[["fond","Fondamental"],["tempo","Tempo"],["seuil","Seuil"],["recup","Récupération"]];
 function drawMe(){
   var a=me[ath];
-  aFond.value=mmss(a.fond);aTempo.value=mmss(a.tempo);
-  aSeuil.value=mmss(a.seuil);aRecup.value=mmss(a.recup);aFc.value=a.fc;
+  paces.innerHTML=PACEF.map(function(f){
+    var m=Math.floor(a[f[0]]),sc=Math.round((a[f[0]]-m)*60);
+    if(sc===60){m++;sc=0}
+    return '<div class="paceRow"><label>'+f[1]+'</label><div class="paceIn">'+
+      '<input type="number" inputmode="numeric" id="p_'+f[0]+'_m" value="'+m+'" min="3" max="15" aria-label="'+f[1]+', minutes">'+
+      "<span>'</span>"+
+      '<input type="number" inputmode="numeric" id="p_'+f[0]+'_s" value="'+String(sc).padStart(2,"0")+
+      '" min="0" max="59" aria-label="'+f[1]+', secondes"><span>/km</span></div></div>';
+  }).join("");
+  aFc.value=a.fc;
   rythme.innerHTML=ath==="edgar"?
    '<h3 class="sec">Rythme de la semaine</h3><div class="pair">'+
    '<button class="opt'+(appoint?"":" on")+'" onclick="setAppoint(false)"><b>3 séances</b>'+
    '<span>lundi, mercredi, jeudi</span></button><button class="opt'+(appoint?" on":"")+
    '" onclick="setAppoint(true)"><b>4 séances</b><span>+ appoint le vendredi</span></button></div>'+
-   '<p style="font-size:.75rem;color:var(--soft)">La sortie longue du dimanche s\'ajoute dans les deux cas.</p>':"";
+   '<p style="font-size:.75rem;color:var(--soft)">La sortie longue du dimanche s\'ajoute dans les deux cas. '+
+   "L'appoint disparaît de lui-même en semaines 4 à 6, quand les autres séances sont les plus longues.</p>":"";
   var Z=[["Zone 1 · récupération",.60,.70],["Zone 2 · fondamental",.70,.80],
          ["Zone 3 · tempo",.80,.88],["Zone 4 · seuil",.88,.94],["Zone 5 · maximale",.94,1]];
   zones.innerHTML='<h3 class="sec">Zones de fréquence cardiaque</h3>'+Z.map(function(z){
@@ -688,12 +699,20 @@ function drawMe(){
       Math.round(a.fc*z[2])+'</b></div>'}).join("");
 }
 function saveMe(){
-  var a=me[ath],v;
-  v=parsePace(aFond.value);if(v)a.fond=v;
-  v=parsePace(aTempo.value);if(v)a.tempo=v;
-  v=parsePace(aSeuil.value);if(v)a.seuil=v;
-  v=parsePace(aRecup.value);if(v)a.recup=v;
-  v=parseInt(aFc.value);if(v)a.fc=v;
+  var a=me[ath],bad=[];
+  PACEF.forEach(function(f){
+    var mE=document.getElementById("p_"+f[0]+"_m"),sE=document.getElementById("p_"+f[0]+"_s");
+    var m=parseInt(mE.value),sc=parseInt(sE.value);
+    if(isNaN(m))return;
+    if(isNaN(sc))sc=0;
+    if(sc>59){bad.push(f[1]);return}
+    var v=m+sc/60;
+    if(v<3||v>15){bad.push(f[1]);return}
+    a[f[0]]=v;
+  });
+  var fc=parseInt(aFc.value);
+  if(fc>=120&&fc<=230)a.fc=fc;else if(aFc.value)bad.push("fréquence maximale");
+  if(bad.length){toast("Valeur incohérente : "+bad.join(", "));render();return}
   var ok=put("ct_allures",JSON.stringify(me));
   toast(ok?"Allures enregistrées":"Allures appliquées, mais non conservées après fermeture");
   render();
