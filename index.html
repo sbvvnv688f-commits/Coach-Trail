@@ -139,6 +139,7 @@ h3.sec{font-size:.95rem;font-weight:700;margin:1.2rem 0 .6rem}
     <button onclick="setTab('plan')" aria-selected="true" id="tPlan">Plan</button>
     <button onclick="setTab('goal')" aria-selected="false" id="tGoal">Objectif</button>
     <button onclick="setTab('log')" aria-selected="false" id="tLog">Carnet</button>
+    <button onclick="setTab('renfo')" aria-selected="false" id="tRenfo">Renfo</button>
     <button onclick="setTab('lex')" aria-selected="false" id="tLex">Lexique</button>
     <button onclick="setTab('me')" aria-selected="false" id="tMe">Réglages</button>
   </nav>
@@ -180,6 +181,7 @@ h3.sec{font-size:.95rem;font-weight:700;margin:1.2rem 0 .6rem}
       <h3 class="sec">Séances enregistrées</h3>
       <div id="logList"></div>
     </section>
+    <section id="renfo" class="panel"></section>
     <section id="lex" class="panel"></section>
     <section id="me" class="panel">
       <div id="warnStore2"></div>
@@ -221,16 +223,18 @@ var PAR={
   seuil:[[2,8,"tempo"],[3,8,"tempo"],[2,12,"tempo"],[2,8,"tempo"],
          [3,10,"seuil"],[2,15,"seuil"],[1,20,"tempo"],[3,3,"seuil"]],
   cotes:[[6,2],[7,2],[8,2],[5,2],[6,3],[8,3],[6,2],[4,1.5]],
-  ef:[45,45,50,40,50,45,40,25],
-  ap:[40,45,45,0,45,40,40,0],
+  cible:[68,74,80,64,88,90,74,55],
+  ef:[60,66,74,54,84,82,64,40],
+  ap:[40,42,45,0,0,0,35,0],
   lg:[[15,300],[17,400],[20,500],[14,300],[23,600],[26,750],[19,500],[42,1200]],
-  jours:["Lundi","Mercredi","Jeudi","Vendredi","Dimanche"],ech:20},
+  jours:["Lundi","Mercredi","Jeudi","Vendredi","Dimanche"],ech:30},
  laurie:{vasc:900,
   seuil:[[2,6,"tempo"],[2,8,"tempo"],[3,7,"tempo"],[2,6,"tempo"],
          [3,8,"tempo"],[3,8,"tempo"],[2,6,"tempo"],[3,3,"tempo"]],
   cotes:[[5,1.5],[6,1.5],[7,1.5],[5,1.5],[6,2],[7,2],[5,1.5],[4,1]],
-  nat:[33,33,33,30,38,40,33,25],
-  lg:[[10,200],[12,250],[14,300],[11,200],[16,380],[18,450],[14,300],[20,600]],
+  cible:[58,58,60,50,60,60,55,45],
+  ef:[50,55,60,45,60,60,50,35],
+  lg:[[9,180],[11,230],[13,280],[10,180],[15,350],[17,430],[13,280],[20,600]],
   jours:["Jour 1","Jour 2","Jour 3","Week-end"],ech:15}
 };
 
@@ -293,6 +297,125 @@ var LEX=[
  ["Tour automatique","Découpage de la séance par la montre à chaque kilomètre. Indispensable pour lire où le terrain a coûté.",""]
 ];
 
+/* ===== progression du travail de descente =====
+   Le D− est le facteur de casse d'un urban trail : freinage répété, escaliers,
+   revêtement dur. Il se construit par paliers, jamais d'un coup. */
+var DESC={
+ edgar:[
+  "Trottinées, pose de pied douce. On récupère, on ne travaille pas encore",
+  "Trottinées, cadence légèrement plus élevée, petits pas",
+  "Deux descentes sur les six menées un peu plus vite, le reste en récupération",
+  "Trottinées souples : semaine allégée, aucune sollicitation en freinage",
+  "La moitié des descentes en appui actif, buste légèrement en avant",
+  "Toutes les descentes en appui actif : c'est le pic du travail excentrique",
+  "Retour en trottinées souples : la fraîcheur prime désormais",
+  "Marchées. Plus aucune contrainte de freinage avant la course"],
+ laurie:[
+  "Trottinées, pose de pied douce",
+  "Trottinées souples, petits pas",
+  "Trottinées, cadence un peu plus élevée",
+  "Trottinées souples : semaine allégée",
+  "Trottinées, deux descentes en appui un peu plus actif",
+  "Trottinées, la moitié en appui actif",
+  "Trottinées souples",
+  "Marchées"]
+};
+
+/* ===== renforcement ===== */
+var RENFO={
+ edgar:{
+  intro:"Ton historique — tendinite du genou et tendon d'Achille gauche, crampes de mollet — désigne le tendon "+
+    "comme facteur limitant, pas le cardio. Le travail excentrique est la seule prévention dont l'efficacité soit "+
+    "établie sur les tendinopathies achilléennes. Deux séances par semaine, 15 à 20 minutes, "+
+    "enchaînées directement après la course pendant que le corps est chaud.",
+  seances:[
+   {nom:"Séance A — force",quand:"Mercredi, après les côtes",duree:"18 min",
+    but:"Développer la force en montée et la résistance au freinage en descente.",
+    ex:[
+     {n:"Mollets excentriques sur marche",s:"3 × 15 par jambe",
+      t:"Montée sur les deux pieds, descente sur un seul en 3 secondes, talon sous le niveau de la marche.",
+      e:"Descendre trop vite. La lenteur est le stimulus, pas la charge.",
+      w:"Le seul exercice non négociable de ta liste. Commence par la jambe gauche pour lui donner tes forces intactes."},
+     {n:"Chaise contre un mur",s:"3 × 45 s",
+      t:"Dos plaqué, cuisses parallèles au sol, poids sur les talons.",
+      e:"Remonter le bassin quand ça brûle. Descends plutôt la durée que la position.",
+      w:"Prépare le quadriceps au freinage répété des escaliers stéphanois."},
+     {n:"Fentes marchées",s:"3 × 12 par jambe",
+      t:"Grand pas, genou arrière proche du sol, buste droit. Le genou avant ne dépasse pas la pointe du pied.",
+      e:"Pas trop court, qui reporte la charge sur le genou au lieu de la fesse.",
+      w:"Force en montée, et stabilité du bassin en fin de course."},
+     {n:"Gainage ventral",s:"3 × 45 s",
+      t:"Appui sur les avant-bras, corps aligné des talons à la nuque.",
+      e:"Bassin qui s'affaisse ou fesses relevées.",
+      w:"Une foulée tient par le tronc quand les jambes ne suivent plus."}]},
+   {nom:"Séance B — stabilité",quand:"Jeudi, après l'endurance",duree:"15 min",
+    but:"Protéger la cheville et le genou sur terrain irrégulier, corriger les déséquilibres droite-gauche.",
+    ex:[
+     {n:"Mollets excentriques, jambe gauche seule",s:"3 × 15",
+      t:"Même exécution qu'en séance A, sur la jambe gauche uniquement.",
+      e:"Sauter la séance quand tout va bien. C'est précisément là qu'elle sert.",
+      w:"Dose supplémentaire sur le côté fragile. C'est ce rattrapage qui fait la différence sur huit semaines."},
+     {n:"Pont fessier sur une jambe",s:"3 × 12 par jambe",
+      t:"Allongé sur le dos, une jambe tendue, monter le bassin par la fesse d'appui.",
+      e:"Pousser avec le bas du dos plutôt qu'avec la fesse.",
+      w:"Un fessier faible transfère la charge sur les ischio-jambiers, puis sur le mollet."},
+     {n:"Gainage latéral",s:"3 × 40 s par côté",
+      t:"Appui sur l'avant-bras et le pied, corps aligné vu de face.",
+      e:"Bassin qui recule, ce qui transforme l'exercice en position de repos.",
+      w:"Tient le bassin sur les appuis instables des sentiers."},
+     {n:"Équilibre sur plan instable",s:"3 × 45 s par jambe",
+      t:"Sur ton plan instable, genou légèrement fléchi. Yeux ouverts, puis fermés quand c'est acquis.",
+      e:"Se rattraper au mur. Mieux vaut réduire la durée et rester autonome.",
+      w:"Réduit le risque d'entorse, et améliore la vitesse en descente technique."}]}],
+  prog:[
+   ["Semaines 1 à 3","Installer le geste. Aucune charge additionnelle. Chercher la lenteur sur les descentes de mollet, la stabilité sur le reste. Si des courbatures apparaissent au tendon plutôt qu'au muscle, réduis à deux séries."],
+   ["Semaines 4 à 6","Ajouter une quatrième série sur le mollet excentrique, ou un sac à dos lesté de 5 kg. Porter le gainage à 60 secondes. Les fentes passent à 15 répétitions."],
+   ["Semaines 7 et 8","Maintenir le mollet excentrique à l'identique, alléger tout le reste de moitié. Arrêter complètement le renforcement les cinq jours précédant la course."]],
+  regle:"Une douleur tendineuse qui persiste le lendemain matin impose de sauter la séance suivante. "+
+    "Une gêne musculaire diffuse, non."},
+ laurie:{
+  intro:"La sensibilité des genoux se traite en amont, par la hanche. Un genou douloureux en descente est presque "+
+    "toujours un genou insuffisamment tenu par le moyen fessier et le quadriceps. Deux séances par semaine, "+
+    "15 minutes, juste après la course.",
+  seances:[
+   {nom:"Séance A — force",quand:"Jour 2, après les côtes",duree:"15 min",
+    but:"Renforcer le quadriceps et la chaîne latérale qui stabilisent le genou en descente.",
+    ex:[
+     {n:"Chaise contre un mur",s:"3 × 45 s",
+      t:"Dos plaqué, cuisses parallèles au sol, poids sur les talons.",
+      e:"Genoux qui rentrent vers l'intérieur.",
+      w:"Le quadriceps est le premier amortisseur du genou en descente."},
+     {n:"Montées sur marche",s:"3 × 12 par jambe",
+      t:"Monter sur une marche basse en poussant sur la jambe d'appui, redescendre lentement en 3 secondes.",
+      e:"S'aider de l'élan de la jambe libre.",
+      w:"La descente lente est la partie utile : c'est le geste de la descente en course."},
+     {n:"Abduction de hanche en appui latéral",s:"3 × 15 par côté",
+      t:"Allongée sur le côté, jambe supérieure tendue montée lentement.",
+      e:"Basculer le bassin en arrière pour tricher.",
+      w:"Le moyen fessier empêche le genou de s'effondrer vers l'intérieur à chaque appui."},
+     {n:"Gainage ventral",s:"3 × 40 s",
+      t:"Appui sur les avant-bras, corps aligné.",e:"Bassin qui s'affaisse.",w:""}]},
+   {nom:"Séance B — stabilité",quand:"Jour 3, après l'endurance",duree:"12 min",
+    but:"Équilibre, proprioception et chaîne postérieure.",
+    ex:[
+     {n:"Pont fessier sur une jambe",s:"3 × 12 par jambe",
+      t:"Monter le bassin par la fesse d'appui, jambe libre tendue.",
+      e:"Pousser avec le bas du dos.",w:""},
+     {n:"Gainage latéral",s:"3 × 35 s par côté",
+      t:"Appui sur l'avant-bras et le pied, corps aligné vu de face.",e:"Bassin qui recule.",w:""},
+     {n:"Équilibre sur plan instable",s:"3 × 45 s par jambe",
+      t:"Genou légèrement fléchi, yeux ouverts puis fermés.",e:"Se rattraper au mur.",
+      w:"Protège la cheville sur les appuis irréguliers."},
+     {n:"Mollets sur marche",s:"2 × 15 par jambe",
+      t:"Montée sur deux pieds, descente lente sur un seul.",e:"Descendre trop vite.",
+      w:"Prévention générale, moins prioritaire que pour Edgar mais utile."}]}],
+  prog:[
+   ["Semaines 1 à 3","Installer le geste, sans charge. Priorité à la qualité d'exécution sur le nombre."],
+   ["Semaines 4 à 6","Porter le gainage à 50 secondes, passer les montées sur marche à 15 répétitions."],
+   ["Semaines 7 et 8","Réduire de moitié. Arrêter cinq jours avant la course."]],
+  regle:"Une douleur vive au genou pendant un exercice impose de l'arrêter, pas de le poursuivre en serrant les dents."}
+};
+
 /* ===== profils ===== */
 var DEF={edgar:{fond:6.3,tempo:5.5,seuil:5.1,recup:7.0,fc:190},
          laurie:{fond:8.0,tempo:7.5,seuil:7.2,recup:8.5,fc:185}};
@@ -346,6 +469,9 @@ function build(){
     b.push([d,f,"Bloc "+(j+1)+" sur "+n+" à allure "+f,"Allure "+mmss(a[f])+"/km, régulière du début à la fin"]);
     if(j<n-1)b.push([3,"recup","Trot de récupération","Assez lent pour que le souffle redescende"]);
   }
+  var used=ech+n*d+(n-1)*3+10;
+  var liaQ=Math.max(5,Math.round(p.cible[i]-used));
+  b.push([liaQ,"fond","Footing de liaison","Retour à une allure facile, respiration qui redescend"]);
   b.push([10,"recup","Retour au calme","Foulée relâchée"]);
   out.push(mk(p.jours[0],(f==="seuil"?"Seuil ":"Tempo ")+n+" × "+d+" min",b,60,f,
     i===7?"Court et vif : réveiller la foulée sans créer de fatigue.":
@@ -353,45 +479,62 @@ function build(){
 
   /* côtes */
   var c=p.cotes[i],up=c[0]*c[1],dn=up*0.8,dplus=Math.round(up/60*p.vasc);
-  var bc=[[ech,"fond","Échauffement progressif","Jusqu'au pied de la côte"]];
+  var bc=[[ech,"fond","Échauffement progressif","Jusqu'au pied de la côte, sans forcer"]];
   bc.push([up,"cote",c[0]+" montées de "+c[1]+" min","Course soutenue, pas sprint. La dernière doit ressembler à la première"]);
-  bc.push([dn,"desc",c[0]+" descentes de récupération",
-    i<4||ath==="laurie"?"En trottinant, pose de pied douce":"En trottinant, c'est aussi du travail de descente"]);
+  bc.push([dn,"desc",c[0]+" descentes",DESC[ath][i]]);
+  var liaC=Math.max(5,Math.round(p.cible[i]-(ech+up+dn+10)));
+  bc.push([liaC,"fond","Footing de liaison","Terrain plat, allure facile"]);
   bc.push([10,"recup","Retour au calme","Puis 15 min de renforcement"]);
   out.push(mk(p.jours[1],"Côtes "+c[0]+" × "+(c[1]===1.5?"90 s":c[1]===1?"60 s":c[1]+" min"),bc,dplus,"cote",
     i===5?"Séance de côtes la plus lourde du plan.":
     (ath==="laurie"?"Descente en trottinant souple : les genoux ne travaillent pas en freinage sur cette séance.":"")));
 
-  /* endurance ou natation */
-  if(ath==="edgar"){
-    var e=p.ef[i];
-    out.push(mk(p.jours[2],"Endurance fondamentale",
-      [[e,"fond","Footing continu","Terrain roulant, aucune côte marquée"]],60,"fond",
-      "Cette séance ne doit jamais être rapide. Si tu finis essoufflé, elle est ratée : c'est elle qui construit ton point faible."));
-    if(appoint&&p.ap[i]){
-      out.push(mk(p.jours[3],"Appoint — endurance souple",
-        [[p.ap[i],"recup","Footing très souple","Plus lent que la veille, sans dénivelé"]],40,"recup",
-        i===5?"Semaine du pic : si tu dois choisir, garde dimanche frais et supprime cette séance.":
-        "Séance d'appoint : la première à sacrifier au moindre signal de la jambe gauche."));
-    }
-  }else{
-    out.push(mk(p.jours[2],"Natation",
-      [[p.nat[i],"nat","Nage continue","Allure régulière"]],0,"nat",
-      "Volume aérobie sans contrainte pour les genoux. Ce n'est pas un jour de repos."));
+  /* endurance fondamentale */
+  out.push(mk(p.jours[2],"Endurance fondamentale",
+    [[p.ef[i],"fond","Footing continu","Terrain roulant, aucune côte marquée"]],60,"fond",
+    ath==="edgar"?
+    (i<3?"Travaille la cadence : vise 170 à 180 pas par minute, affichés par la Race. Un ancien sprinteur "+
+      "garde une foulée longue et bondissante, coûteuse sur 42 km. Raccourcir le pas et augmenter la fréquence "+
+      "réduit le temps de contact au sol et ménage l'Achille.":
+     "Cette séance ne doit jamais être rapide. Si tu finis essoufflé, elle est ratée : c'est elle qui construit ton point faible. "+
+      "Garde un œil sur la cadence, 170 à 180 pas par minute."):
+    "Allure facile du début à la fin. C'est la séance qui bâtit l'endurance, pas celle où l'on se teste."));
+
+  /* appoint, Edgar seulement */
+  if(ath==="edgar"&&appoint&&p.ap[i]){
+    out.push(mk(p.jours[3],"Appoint — endurance souple",
+      [[p.ap[i],"recup","Footing très souple","Plus lent que la veille, sans dénivelé"]],40,"recup",
+      i===5?"Semaine du pic : si tu dois choisir, garde dimanche frais et supprime cette séance.":
+      "Séance d'appoint : la première à sacrifier au moindre signal de la jambe gauche."));
   }
 
   /* sortie longue */
   var l=p.lg[i],race=(i===7);
-  var lmn=l[0]*a.fond+l[1]/100*5;
-  var bl=[[lmn,race?"course":"longue",l[0]+" km avec "+l[1]+" m de D+",
-    "Allure "+mmss(a.fond)+"/km sur les portions plates"]];
-  var extra="";
-  if(i===2)extra="Premier test nutrition : une prise à 1 h, puis toutes les 40 min. 400 à 500 ml de boisson par heure.";
-  if(i===4)extra=ath==="edgar"?"Première sortie spécifique : cherche du bitume et des volées d'escaliers en descente. C'est ce qui casse sur un urban trail.":
+  var lmn=l[0]*a.fond+l[1]/100*5,bl=[],extra="";
+  if(race){
+    bl=[[lmn,"course",l[0]+" km avec "+l[1]+" m de D+","Allure "+mmss(a.fond)+"/km sur les portions plates"]];
+    extra="Prise alimentaire toutes les 40 min dès la 45e. Prudence sur les dix premiers kilomètres : "+
+      "les deux premières heures doivent sembler trop lentes.";
+  }else if(i>=4){
+    /* bloc à allure course inséré au deux tiers */
+    var spec=[0,0,0,0,20,30,20][i]||0;
+    bl=[[Math.round(lmn*0.6),"longue","Première partie à allure fondamentale",
+         "Allure "+mmss(a.fond)+"/km, respiration facile"],
+        [spec,"tempo","Bloc à allure course","Allure "+mmss((a.fond+a.tempo)/2)+
+         "/km, sur terrain représentatif du parcours"],
+        [Math.round(lmn*0.4)-spec,"longue","Retour à allure fondamentale",
+         "Sur jambes déjà fatiguées : c'est là que se joue la fin de course"]];
+  }else{
+    bl=[[lmn,"longue",l[0]+" km avec "+l[1]+" m de D+","Allure "+mmss(a.fond)+"/km, sans bloc rapide"]];
+  }
+  if(i===2)extra="Premier test nutrition : une prise à 1 h, puis toutes les 40 min, et 400 à 500 ml de boisson par heure. "+
+    "Intègre aussi deux volées d'escaliers en descente, sans forcer : la descente se construit tôt, pas la veille.";
+  if(i===4)extra=ath==="edgar"?
+    "Sortie spécifique : bitume et escaliers en descente sur au moins un tiers du parcours. Sur un urban trail, "+
+    "c'est le freinage répété qui détruit les cuisses, pas la montée.":
     "Première sortie longue avec les semelles orthopédiques. La contrainte articulaire diffère de l'entraînement habituel.";
   if(i===5)extra="Répétition générale : tenue, chaussures, sac, nutrition et horaire du jour J. Son chrono fixe l'objectif définitif.";
-  if(i===6)extra=ath==="edgar"?"Dernier volume conséquent, dont 5 km à allure course au milieu.":"Dernier volume conséquent.";
-  if(race)extra="Prise alimentaire toutes les 40 min dès la 45e. Prudence sur les dix premiers kilomètres.";
+  if(i===6)extra="Dernier volume conséquent. Le bloc à allure course se place sur jambes fatiguées, comme au 30e kilomètre.";
   out.push(mk(p.jours[ath==="edgar"?4:3],race?"Saint-Étienne Urban Trail":"Sortie longue "+l[0]+" km",
     bl,l[1],race?"course":"longue",extra,race?"race":(i===2||i===4||i===5?"key":"")));
   return out;
@@ -412,11 +555,11 @@ function setAth(x){ath=x;wE.setAttribute("aria-pressed",x==="edgar");
   wL.setAttribute("aria-pressed",x==="laurie");render()}
 function setTab(t){
   document.querySelectorAll(".panel").forEach(function(p){p.classList.toggle("on",p.id===t)});
-  [["plan",tPlan],["goal",tGoal],["log",tLog],["lex",tLex],["me",tMe]]
+  [["plan",tPlan],["goal",tGoal],["log",tLog],["renfo",tRenfo],["lex",tLex],["me",tMe]]
     .forEach(function(x){x[1].setAttribute("aria-selected",x[0]===t)});
   render();
 }
-function render(){drawBars();drawWeek();drawGoal();drawLex();drawMe();drawLog();
+function render(){drawBars();drawWeek();drawGoal();drawLex();drawRenfo();drawMe();drawLog();
   warnStore.innerHTML=storeWarn();warnStore2.innerHTML=storeWarn()}
 
 /* ===== profil de charge ===== */
@@ -503,6 +646,28 @@ function drawLex(){
    'Les termes du plan, avec les valeurs qui te concernent.</p>'+
    LEX.map(function(l){return '<div class="lex"><b>'+l[0]+'</b><p>'+l[1]+'</p>'+
      (l[2]?'<div class="me num">'+l[2]+'</div>':"")+'</div>'}).join("");
+}
+
+function drawRenfo(){
+  var r=RENFO[ath];
+  var h='<p style="font-size:.85rem;margin-bottom:1rem">'+r.intro+'</p>';
+  h+=r.seances.map(function(sc){
+    return '<div class="weekhead" style="margin-top:1.2rem"><h2 style="font-size:1rem">'+sc.nom+
+      '</h2><div class="dates num">'+sc.duree+'</div></div>'+
+      '<p style="font-size:.78rem;color:var(--soft);margin-bottom:.2rem">'+sc.quand+'</p>'+
+      '<p style="font-size:.82rem;margin-bottom:.6rem">'+sc.but+'</p>'+
+      sc.ex.map(function(e){
+        return '<div class="lex"><div style="display:flex;justify-content:space-between;gap:.6rem">'+
+          '<b>'+e.n+'</b><span class="num" style="font-size:.8rem;font-weight:700;color:var(--bistre);white-space:nowrap">'+e.s+'</span></div>'+
+          '<p>'+e.t+'</p>'+
+          '<p style="color:var(--alerte);font-size:.78rem;margin-top:2px">À éviter : '+e.e+'</p>'+
+          (e.w?'<div class="me">'+e.w+'</div>':"")+'</div>';
+      }).join("");
+  }).join("");
+  h+='<h3 class="sec">Progression sur huit semaines</h3><div class="chk">'+
+    r.prog.map(function(p){return '<div class="chk-item"><b>'+p[0]+'</b><p>'+p[1]+'</p></div>'}).join("")+'</div>'+
+    '<div class="warn">'+r.regle+'</div>';
+  renfo.innerHTML=h;
 }
 
 /* ===== réglages ===== */
