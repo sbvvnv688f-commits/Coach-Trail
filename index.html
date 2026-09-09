@@ -484,16 +484,22 @@ function build(){
     (i===0?"Première séance de qualité. Reste sous tes sensations : la marge se prend plus tard.":"")));
 
   /* côtes */
-  var c=p.cotes[i],up=c[0]*c[1],dn=up*0.8,dplus=Math.round(up/60*p.vasc);
+  var c=p.cotes[i],up=c[0]*c[1],dn=up*0.8,dnEach=dn/c[0],dplus=Math.round(up/60*p.vasc);
   var bc=[[ech,"fond","Échauffement progressif","Jusqu'au pied de la côte, sans forcer"]];
   bc.push([up,"cote",c[0]+" montées de "+c[1]+" min","Course soutenue, pas sprint. La dernière doit ressembler à la première"]);
   bc.push([dn,"desc",c[0]+" descentes",DESC[ath][i]]);
   var liaC=Math.max(5,Math.round(p.cible[i]-(ech+up+dn+10)));
   bc.push([liaC,"terrainFond","Footing de liaison","Sur le relief du secteur, allure facile"]);
   bc.push([10,"recup","Retour au calme","Puis 15 min de renforcement"]);
-  out.push(mk(p.jours[1],"Côtes "+c[0]+" × "+(c[1]===1.5?"90 s":c[1]===1?"60 s":c[1]+" min"),bc,dplus,"cote",
-    i===5?"Séance de côtes la plus lourde du plan.":
-    (ath==="laurie"?"Descente en trottinant souple : les genoux ne travaillent pas en freinage sur cette séance.":"")));
+  var cadNote=ath==="edgar"?
+    "En montée, vise 160 à 170 pas par minute : petits pas, pied qui repart vite, plutôt que la poussée puissante "+
+    "et la foulée longue qu'un sprinteur a naturellement envie de produire. Au-delà d'environ 15-18 % de pente, "+
+    "marcher vite devient plus économique que courir — et bien plus protecteur pour l'Achille : marcher n'est pas un aveu de faiblesse.":"";
+  var sc=mk(p.jours[1],"Côtes "+c[0]+" × "+(c[1]===1.5?"90 s":c[1]===1?"60 s":c[1]+" min"),bc,dplus,"cote",
+    (i===5?"Séance de côtes la plus lourde du plan. ":
+    (ath==="laurie"?"Descente en trottinant souple : les genoux ne travaillent pas en freinage sur cette séance. ":""))
+    +cadNote);
+  out.push(sc);
 
   /* endurance fondamentale, sur le relief du secteur */
   var efKm=p.ef[i]/terrainPace(a.fond),efDp=Math.round(efKm*TERRAIN);
@@ -612,12 +618,14 @@ function drawWeek(){
 }
 
 /* ===== fiche séance ===== */
+var HRZM={fond:[.70,.80,"zone 2"],terrainFond:[.70,.80,"zone 2"],tempo:[.80,.88,"zone 3"],
+  seuil:[.88,.94,"zone 4"],cote:[.84,.94,"zones 3-4"],desc:[.68,.78,"zone 2"],
+  recup:[.60,.70,"zone 1"],terrainRecup:[.60,.70,"zone 1"],
+  longue:[.70,.80,"zone 2"],course:[.72,.85,"zones 2-3"],nat:[.70,.80,"zone 2"]};
+
 function openSheet(i){
   var x=build()[i],a=me[ath];
-  var zm={fond:[.70,.80,"zone 2"],tempo:[.80,.88,"zone 3"],seuil:[.88,.94,"zone 4"],
-    cote:[.84,.94,"zones 3-4"],recup:[.60,.70,"zone 1"],longue:[.70,.80,"zone 2"],
-    course:[.72,.85,"zones 2-3"],nat:[.70,.80,"zone 2"]};
-  var z=zm[x.feel]||zm.fond;
+  var z=HRZM[x.feel]||HRZM.fond;
   var steps=x.b.map(function(b){
     return '<div class="step"><div class="t num">'+(b[0]>=60?hm(b[0]):Math.round(b[0])+" min")+
       '</div><div class="b">'+b[2]+'<em>'+b[3]+'</em></div></div>';
