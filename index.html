@@ -417,8 +417,13 @@ var RENFO={
   regle:"Une douleur vive au genou pendant un exercice impose de l'arrêter, pas de le poursuivre en serrant les dents."}
 };
 
-/* ===== profils ===== */
-var DEF={edgar:{fond:6.3,tempo:5.5,seuil:5.1,recup:7.0,fc:190},
+/* ===== relief du terrain =====
+   Peu de terrain plat disponible : chaque sortie porte un dénivelé structurel,
+   environ 20 m par km, qui s'ajoute au D+ programmé et allonge la durée réelle.
+   Convention : 5 min de plus par 100 m de D+, cohérente avec le reste du plan. */
+var TERRAIN=20;
+function terrainPace(base){return base+TERRAIN/100*5}
+var DEF={edgar:{fond:6.3,tempo:5.5,seuil:5.1,recup:7.0,fc:198},
          laurie:{fond:8.0,tempo:7.5,seuil:7.2,recup:8.5,fc:185}};
 var ath="edgar",wk=0,me=JSON.parse(JSON.stringify(DEF)),logs=[],appoint=true,last=null,STORE=true;
 
@@ -472,7 +477,7 @@ function build(){
   }
   var used=ech+n*d+(n-1)*3+10;
   var liaQ=Math.max(5,Math.round(p.cible[i]-used));
-  b.push([liaQ,"fond","Footing de liaison","Retour à une allure facile, respiration qui redescend"]);
+  b.push([liaQ,"terrainFond","Footing de liaison","Sur le relief du secteur, allure facile"]);
   b.push([10,"recup","Retour au calme","Foulée relâchée"]);
   out.push(mk(p.jours[0],(f==="seuil"?"Seuil ":"Tempo ")+n+" × "+d+" min",b,60,f,
     i===7?"Court et vif : réveiller la foulée sans créer de fatigue.":
@@ -484,27 +489,30 @@ function build(){
   bc.push([up,"cote",c[0]+" montées de "+c[1]+" min","Course soutenue, pas sprint. La dernière doit ressembler à la première"]);
   bc.push([dn,"desc",c[0]+" descentes",DESC[ath][i]]);
   var liaC=Math.max(5,Math.round(p.cible[i]-(ech+up+dn+10)));
-  bc.push([liaC,"fond","Footing de liaison","Terrain plat, allure facile"]);
+  bc.push([liaC,"terrainFond","Footing de liaison","Sur le relief du secteur, allure facile"]);
   bc.push([10,"recup","Retour au calme","Puis 15 min de renforcement"]);
   out.push(mk(p.jours[1],"Côtes "+c[0]+" × "+(c[1]===1.5?"90 s":c[1]===1?"60 s":c[1]+" min"),bc,dplus,"cote",
     i===5?"Séance de côtes la plus lourde du plan.":
     (ath==="laurie"?"Descente en trottinant souple : les genoux ne travaillent pas en freinage sur cette séance.":"")));
 
-  /* endurance fondamentale */
+  /* endurance fondamentale, sur le relief du secteur */
+  var efKm=p.ef[i]/terrainPace(a.fond),efDp=Math.round(efKm*TERRAIN);
   out.push(mk(p.jours[2],"Endurance fondamentale",
-    [[p.ef[i],"fond","Footing continu","Terrain roulant, aucune côte marquée"]],60,"fond",
+    [[p.ef[i],"terrainFond","Footing continu","Sur le relief habituel, sans chercher les plus grosses côtes du secteur"]],efDp,"fond",
     ath==="edgar"?
     (i<3?"Travaille la cadence : vise 170 à 180 pas par minute, affichés par la Race. Un ancien sprinteur "+
       "garde une foulée longue et bondissante, coûteuse sur 42 km. Raccourcir le pas et augmenter la fréquence "+
-      "réduit le temps de contact au sol et ménage l'Achille.":
+      "réduit le temps de contact au sol et ménage l'Achille. Sur ce terrain, l'allure sera plus lente qu'en plaine : "+
+      "vise la sensation, pas le chiffre.":
      "Cette séance ne doit jamais être rapide. Si tu finis essoufflé, elle est ratée : c'est elle qui construit ton point faible. "+
       "Garde un œil sur la cadence, 170 à 180 pas par minute."):
     "Allure facile du début à la fin. C'est la séance qui bâtit l'endurance, pas celle où l'on se teste."));
 
   /* appoint, Edgar seulement */
   if(ath==="edgar"&&appoint&&p.ap[i]){
+    var apKm=p.ap[i]/terrainPace(a.recup),apDp=Math.round(apKm*TERRAIN);
     out.push(mk(p.jours[3],"Appoint — endurance souple",
-      [[p.ap[i],"recup","Footing très souple","Plus lent que la veille, sans dénivelé"]],40,"recup",
+      [[p.ap[i],"terrainRecup","Footing très souple","Plus lent que la veille, sur le même relief modéré"]],apDp,"recup",
       i===5?"Semaine du pic : si tu dois choisir, garde dimanche frais et supprime cette séance.":
       "Séance d'appoint : la première à sacrifier au moindre signal de la jambe gauche."));
   }
@@ -536,18 +544,21 @@ function build(){
     "Première sortie longue avec les semelles orthopédiques. La contrainte articulaire diffère de l'entraînement habituel.";
   if(i===5)extra="Répétition générale : tenue, chaussures, sac, nutrition et horaire du jour J. Son chrono fixe l'objectif définitif.";
   if(i===6)extra="Dernier volume conséquent. Le bloc à allure course se place sur jambes fatiguées, comme au 30e kilomètre.";
-  out.push(mk(p.jours[ath==="edgar"?4:3],race?"Saint-Étienne Urban Trail":"Sortie longue "+l[0]+" km",
-    bl,l[1],race?"course":"longue",extra,race?"race":(i===2||i===4||i===5?"key":"")));
+  out.push(mk(p.jours[ath==="edgar"?4:3],race?"Saint-Étienne Urban Trail":"Sortie longue",
+    bl,l[1],race?"course":"longue",extra,race?"race":(i===2||i===4||i===5?"key":""),l[0]));
   return out;
 }
-function mk(day,title,blocks,dp,feel,note,cls){
+function mk(day,title,blocks,dp,feel,note,cls,kmFix){
   var a=me[ath],p=PAR[ath],cote=a.fond+3.2,desc=a.tempo+0.1;
   var mn=0,km=0;
   for(var i=0;i<blocks.length;i++){
     var t=blocks[i][0],f=blocks[i][1];mn+=t;
-    var v=f==="cote"?cote:f==="desc"?desc:f==="longue"||f==="course"?a.fond:f==="nat"?0:a[f];
+    var v=f==="cote"?cote:f==="desc"?desc:f==="longue"||f==="course"?a.fond:
+      f==="terrainFond"?terrainPace(a.fond):f==="terrainRecup"?terrainPace(a.recup):
+      f==="nat"?0:a[f];
     if(v>0)km+=t/v;
   }
+  if(kmFix!=null)km=kmFix;
   return {day:day,title:title,b:blocks,dp:dp,mn:mn,km:km,feel:feel,note:note||"",cls:cls||""};
 }
 
@@ -773,7 +784,17 @@ function parseSuunto(j){
   var dl=findLog(j);if(!dl||!dl.Header)throw new Error("en-tête introuvable");
   var h=dl.Header,km=(h.Distance||0)/1000,sec=h.Duration||0;
   var asc=Math.round(h.Ascent||0),desc=Math.round(h.Descent||0);
-  var hrA=h.HR?hrv(h.HR.Avg):null,hrM=h.HR?hrv(h.HR.Max):null;
+  var hrA=null,hrM=null;
+  if(h.HR&&h.HR.Avg!=null){hrA=hrv(h.HR.Avg);hrM=hrv(h.HR.Max)}
+  else if(Array.isArray(dl.Samples)&&dl.Samples.length){
+    var sum=0,n=0,mx=0;
+    for(var i=0;i<dl.Samples.length;i++){
+      var v=dl.Samples[i].HR;
+      if(v!=null){sum+=v;n++;if(v>mx)mx=v}
+    }
+    if(n){hrA=Math.round(sum/n*60);hrM=Math.round(mx*60)}
+  }
+  var cad=(h.StepCount&&sec)?Math.round(h.StepCount/(sec/60)):null;
   var p=km>0?(sec/60)/km:0,dt=h.DateTime?new Date(h.DateTime):null;
   last={km:km,sec:sec,asc:asc,hrA:hrA,date:dt?dt.toISOString().slice(0,10):""};
   var laps=collectLaps(dl);
@@ -782,20 +803,19 @@ function parseSuunto(j){
    (dt?dt.toLocaleDateString("fr-FR"):"date inconnue")+'</div></div>'+
    '<div class="figs">'+fg(km.toFixed(1)+" km","distance")+fg(asc+" m","dénivelé +")+fg(hm(sec/60),"durée")+
    fg(mmss(p),"allure moyenne")+fg(desc+" m","dénivelé −")+fg(hrA?hrA+" bpm":"—","FC moyenne")+'</div>'+
-   compare(km,asc,sec)+splitsHtml(laps,p)+zoneHtml(hrA,hrM)+
+   compare(km,asc,sec)+splitsHtml(laps,p)+zoneHtml(hrA,hrM)+cadHtml(cad)+
    '<button class="act" onclick="toLog()" style="margin-top:1rem">Ajouter au carnet</button>';
 }
 function fg(v,l){return '<div class="fig"><b class="num">'+v+'</b><span>'+l+'</span></div>'}
 function collectLaps(dl){
-  var out=[],s=dl.Samples||[];
-  for(var i=0;i<s.length;i++){
-    var w=s[i]&&s[i].Window;if(!w)continue;
-    if((w.Type||"").toLowerCase().indexOf("lap")<0)continue;
-    var d=(w.Distance||0)/1000,t=w.Duration||0;if(d<=0||t<=0)continue;
+  var out=[],w=dl.Windows||[];
+  for(var i=0;i<w.length;i++){
+    var ww=w[i]&&w[i].Window;if(!ww)continue;
+    if((ww.Type||"").toLowerCase().indexOf("lap")<0)continue;
+    var d=(ww.Distance||0)/1000,t=ww.Duration||0;if(d<=0||t<=0)continue;
     var hr=null;
-    if(Array.isArray(w.HR)&&w.HR[0])hr=hrv(w.HR[0].Avg);
-    else if(w.HR)hr=hrv(w.HR.Avg);
-    out.push({d:d,t:t,asc:Math.round(w.Ascent||0),hr:hr,pace:(t/60)/d});
+    if(Array.isArray(ww.HR)&&ww.HR[0]&&ww.HR[0].Avg!=null)hr=hrv(ww.HR[0].Avg);
+    out.push({d:d,t:t,asc:Math.round(ww.Ascent||0),hr:hr,pace:(t/60)/d});
   }
   return out;
 }
@@ -839,6 +859,17 @@ function zoneHtml(hrA,hrM){
     "l'intérêt de ces séances tient à leur allure basse.";
   return '<div class="block" style="margin-top:1rem"><h4>Lecture cardiaque</h4><p style="font-size:.85rem">'+m+
     (hrM?' Maximale relevée : <span class="num">'+hrM+' bpm</span>.':"")+'</p></div>';
+}
+function cadHtml(cad){
+  if(!cad)return "";
+  var m='Cadence moyenne mesurée : <span class="num">'+cad+' pas par minute</span>.';
+  if(ath==="edgar"){
+    if(cad<160)m+=" C'est nettement sous la cible de 170 à 180. Une foulée longue et bondissante, héritée du sprint, "+
+      "allonge le temps de contact au sol et charge l'Achille à chaque appui. À travailler en priorité sur les prochaines endurances.";
+    else if(cad<170)m+=" Proche de la cible de 170 à 180, encore un peu bas.";
+    else m+=" Dans la cible visée de 170 à 180.";
+  }
+  return '<div class="block"><h4>Cadence</h4><p style="font-size:.85rem">'+m+'</p></div>';
 }
 function toLog(){
   if(!last)return;
