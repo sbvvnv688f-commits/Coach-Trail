@@ -75,6 +75,12 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:1rem 1rem 3
 .step .t{font-size:.8rem;font-weight:700;color:var(--bistre)}
 .step .b{font-size:.85rem}
 .step .b em{display:block;font-style:normal;font-size:.75rem;color:var(--soft);margin-top:1px}
+.ngp{background:#EDF1EE;border-left:3px solid var(--sapin);padding:.6rem .7rem;border-radius:0 6px 6px 0}
+.ngp b{font-size:1.4rem;color:var(--sapin)}
+.ngp span{display:block;font-size:.72rem;color:var(--soft);margin-top:2px}
+.ngp em{font-style:italic}
+.bn{display:inline-block;font-size:.68rem;font-weight:700;color:var(--sapin);
+ background:#E4EDE7;border-radius:3px;padding:0 4px;margin-left:.3rem;vertical-align:1px}
 .feel{background:#EDF1EE;border-left:3px solid var(--sapin);padding:.6rem .7rem;border-radius:0 6px 6px 0;font-size:.85rem}
 .warn{background:#F7EDE8;border-left:3px solid var(--alerte);padding:.6rem .7rem;border-radius:0 6px 6px 0;font-size:.85rem}
 .scen{border:1px solid var(--rule);background:#fff;border-radius:8px;padding:.8rem;margin-bottom:.6rem}
@@ -227,7 +233,7 @@ var PAR={
   cible:[68,74,80,64,88,90,74,55],
   ef:[60,66,74,54,84,82,64,40],
   ap:[40,42,45,0,0,0,35,0],
-  lg:[[15,300],[17,400],[20,500],[14,300],[23,600],[26,750],[19,500],[42,1200]],
+  lg:[[15,500],[17,600],[20,700],[14,480],[23,800],[26,900],[19,650],[42,1200]],
   jours:["Lundi","Mercredi","Jeudi","Vendredi","Dimanche"],ech:30},
  laurie:{vasc:900,
   seuil:[[2,6,"tempo"],[2,8,"tempo"],[3,7,"tempo"],[2,6,"tempo"],
@@ -254,14 +260,14 @@ var FEEL={
 /* ===== objectifs ===== */
 var GOAL={
  edgar:{race:"42 km · 1200 m D+",eq:54,
-  sc:[["Ambitieux","4h50","5'20/km sur plat équivalent. Suppose une préparation sans accroc."],
-      ["Réaliste","5h10","5'45/km. La cible autour de laquelle construire la stratégie de course."],
-      ["Repli","5h35","6'10/km. Gestion prudente si la jambe gauche se manifeste."]],
+  sc:[["Ambitieux","4h25","4'55/km sur plat équivalent. Suppose une préparation sans accroc."],
+      ["Réaliste","4h45","5'17/km. La cible autour de laquelle construire la stratégie de course."],
+      ["Repli","5h10","5'45/km. Gestion prudente si la jambe gauche se manifeste."]],
   chk:[["Fin semaine 3 — 27 septembre","Sortie de 21 km. Ce qui compte : l'allure d'effort à fréquence cardiaque contenue, et l'état de la jambe gauche le lendemain."],
        ["Fin semaine 6 — 18 octobre","Sortie de 28 km avec 750 m de D+. C'est le vrai prédicteur : son chrono fixe la cible définitive."]],
-  tbl:[["2h40","≈ 4h12"],["3h00","≈ 4h43"],["3h20","≈ 5h15"]],
-  note:"Projection à partir du chrono de la semaine 6 sur 28 km et 750 m de D+.",
-  warn:"Descendre sous 4h demanderait de boucler la semaine 6 en 2h32, soit une vingtaine de minutes sous le scénario ambitieux. Peu probable sur huit semaines, mais plus hors d'atteinte : la semaine 6 tranchera."},
+  tbl:[["2h30","≈ 3h59"],["2h45","≈ 4h23"],["3h00","≈ 4h47"]],
+  note:"Projection à partir du chrono de la semaine 6 sur 26 km et 900 m de D+.",
+  warn:"Ta sortie du 13 septembre — 16,4 km et 615 m de D+ en 1h41 à 76 % de ta fréquence maximale — déplace nettement ces cibles vers le haut. Les 4h ne sont plus hors d'atteinte : il faudrait boucler la semaine 6 autour de 2h30. La sortie de 26 km du 18 octobre tranchera."},
  laurie:{race:"20 km · environ 600 m D+",eq:26,
   sc:[["Ambitieux","3h10","7'20/km sur plat équivalent."],
       ["Réaliste","3h25","8'00/km. La cible de travail."],
@@ -419,11 +425,13 @@ var RENFO={
 
 /* ===== relief du terrain =====
    Peu de terrain plat disponible : chaque sortie porte un dénivelé structurel,
-   environ 20 m par km, qui s'ajoute au D+ programmé et allonge la durée réelle.
-   Convention : 5 min de plus par 100 m de D+, cohérente avec le reste du plan. */
-var TERRAIN=20;
-function terrainPace(base){return base+TERRAIN/100*5}
-var DEF={edgar:{fond:6.3,tempo:5.5,seuil:5.1,recup:7.0,fc:198},
+   environ 35 m par km, mesuré sur la sortie du 13 septembre (615 m sur 16,4 km).
+   Convention : 2 min de plus par 100 m de D+. Sur une boucle, la descente
+   récupère une partie du temps perdu en montée — calibré sur la sortie du
+   13 septembre : 16,4 km et 615 m en 1h41. */
+var TERRAIN=35;
+function terrainPace(base){return base+TERRAIN/100*2}
+var DEF={edgar:{fond:5.65,tempo:5.05,seuil:4.7,recup:6.5,fc:198},
          laurie:{fond:8.0,tempo:7.5,seuil:7.2,recup:8.5,fc:185}};
 var ath="edgar",wk=0,me=JSON.parse(JSON.stringify(DEF)),logs=[],appoint=true,last=null,STORE=true;
 
@@ -525,7 +533,9 @@ function build(){
 
   /* sortie longue */
   var l=p.lg[i],race=(i===7);
-  var lmn=l[0]*a.fond+l[1]/100*5,bl=[],extra="";
+  /* au-delà de 30 km l'allure se dégrade : fatigue, ravitaillement, gestion */
+  var usure=race?1.15:(l[0]>22?1.05:1);
+  var lmn=l[0]*a.fond*usure+l[1]/100*2,bl=[],extra="";
   if(race){
     bl=[[lmn,"course",l[0]+" km avec "+l[1]+" m de D+","Allure "+mmss(a.fond)+"/km sur les portions plates"]];
     extra="Prise alimentaire toutes les 40 min dès la 45e. Prudence sur les dix premiers kilomètres : "+
@@ -618,6 +628,17 @@ function drawWeek(){
 }
 
 /* ===== fiche séance ===== */
+/* Allure NGP à tenir : l'effort exprimé en équivalent plat, tel que
+   l'affiche le champ Normalized Graded Pace de la montre. Elle ne dépend
+   pas du terrain, ce qui la rend lisible en montée comme en descente. */
+function ngpOf(f,a){
+  if(f==="tempo")return a.tempo;
+  if(f==="seuil")return a.seuil;
+  if(f==="cote")return a.seuil;          /* montée courue : effort de seuil */
+  if(f==="recup"||f==="terrainRecup")return a.recup;
+  if(f==="desc")return a.fond;           /* descente de récupération */
+  return a.fond;                          /* fondamental, longue, course */
+}
 var HRZM={fond:[.70,.80,"zone 2"],terrainFond:[.70,.80,"zone 2"],tempo:[.80,.88,"zone 3"],
   seuil:[.88,.94,"zone 4"],cote:[.84,.94,"zones 3-4"],desc:[.68,.78,"zone 2"],
   recup:[.60,.70,"zone 1"],terrainRecup:[.60,.70,"zone 1"],
@@ -627,8 +648,11 @@ function openSheet(i){
   var x=build()[i],a=me[ath];
   var z=HRZM[x.feel]||HRZM.fond;
   var steps=x.b.map(function(b){
+    var n=ngpOf(b[1],a);
     return '<div class="step"><div class="t num">'+(b[0]>=60?hm(b[0]):Math.round(b[0])+" min")+
-      '</div><div class="b">'+b[2]+'<em>'+b[3]+'</em></div></div>';
+      '</div><div class="b">'+b[2]+
+      (b[1]!=="nat"?' <span class="bn num">NGP '+mmss(n)+'</span>':"")+
+      '<em>'+b[3]+'</em></div></div>';
   }).join("");
   sheetIn.innerHTML=
    '<div class="sheet-top"><div><h3>'+x.title+'</h3><div class="sub">'+x.day+' · semaine '+(wk+1)+
@@ -636,6 +660,10 @@ function openSheet(i){
    '<div class="figs"><div class="fig"><b class="num">'+x.km.toFixed(1)+' km</b><span>distance</span></div>'+
    '<div class="fig"><b class="num">'+(x.dp?x.dp+" m":"—")+'</b><span>dénivelé +</span></div>'+
    '<div class="fig"><b class="num">'+hm(x.mn)+'</b><span>durée</span></div></div>'+
+   '<div class="block"><h4>Allure NGP à tenir</h4>'+
+     '<div class="ngp"><b class="num">'+mmss(ngpOf(x.feel,a))+'</b>/km'+
+     '<span>champ <em>Normalized Graded Pace</em> de la Race — la même valeur en montée comme en descente</span></div>'+
+   '</div>'+
    '<div class="block"><h4>Déroulé</h4>'+steps+'</div>'+
    (x.feel!=="nat"?'<div class="block"><h4>Fréquence cardiaque</h4><p>'+z[2]+', <span class="num">'+
      Math.round(a.fc*z[0])+"–"+Math.round(a.fc*z[1])+' bpm</span></p></div>':"")+
