@@ -2,7 +2,8 @@
 
 import { h, icone, ICONES } from "../dom.js";
 import { ajouterJours, lundiDe, ecartJours, fmtMois, fmtKm, fmtDuree, fmtMetres, fmtDateLongue, fmtDateCourte, JOURS_COURTS } from "../../core/units.js";
-import { PHASES } from "../../core/planner.js";
+import { PHASES, joursLibres } from "../../core/planner.js";
+import { activerGlisser } from "../glisser.js";
 import { LIBELLES_NIVEAU } from "../../core/zones.js";
 
 // Abréviations courtes : une case fait environ 50 px de large sur iPhone.
@@ -55,9 +56,24 @@ export function vueCalendrier(app) {
       ? h("button", { type: "button", class: "lien retour-aujourdhui", onclick: () => { app.etat.mois = premierDuMois(aujourdhui); app.rendre(); } }, "Revenir à aujourd'hui")
       : null,
     h("div", { class: "jours-entete", "aria-hidden": "true" }, JOURS_COURTS.map((j) => h("span", {}, j))),
-    h("div", { class: "grille" }, lignes),
+    grille(app, lignes, parDate),
     legende(),
   );
+}
+
+// Grille et glissé des séances : cibles = jours libres de la même semaine, et le jour prévu.
+function grille(app, lignes, parDate) {
+  const el = h("div", { class: "grille" }, lignes);
+  const seanceDe = (c) => [...parDate.values()].find((s) => s.id === c.dataset.seance);
+  activerGlisser(el, {
+    cibles: (c) => {
+      const s = seanceDe(c);
+      const sem = s && s.role !== "course" ? app.etat.plan.semaines.find((x) => x.numero === s.semaine) : null;
+      return new Set(sem ? joursLibres(sem, s) : []);
+    },
+    deposer: (c, date) => { const s = seanceDe(c); if (s) app.deplacerSeance(s, date); },
+  });
+  return el;
 }
 
 function compteARebours(plan, aujourdhui, parLundi) {
@@ -81,14 +97,14 @@ function caseJour(app, d, s, mois, aujourdhui, plan) {
 
   if (!s) {
     if (d >= plan.debut && d <= plan.fin) classes.push("repos");
-    return h("div", { class: classes.join(" "), "aria-label": d >= plan.debut && d <= plan.fin ? `${fmtDateLongue(d)} : repos` : null }, num);
+    return h("div", { class: classes.join(" "), dataset: { date: d }, "aria-label": d >= plan.debut && d <= plan.fin ? `${fmtDateLongue(d)} : repos` : null }, num);
   }
 
   classes.push(`n${s.niveau}`);
   if (s.role === "course") classes.push("course");
   if (s.deplacee) classes.push("deplacee");
   const etiquette = `${fmtDateLongue(d)} : ${s.titre}, ${fmtKm(s.distance)} km, ${s.dplus} m de D+, ${fmtDuree(s.duree)}, intensité ${LIBELLES_NIVEAU[s.niveau].toLowerCase()}${s.renfo ? ", avec renforcement" : ""}${s.cle ? ", séance clé" : ""}`;
-  return h("button", { type: "button", class: classes.join(" "), "aria-label": etiquette, onclick: () => app.ouvrirSeance(s.id) },
+  return h("button", { type: "button", class: classes.join(" "), dataset: { date: d, seance: s.id }, "aria-label": etiquette, onclick: () => app.ouvrirSeance(s.id) },
     num,
     s.cle ? h("span", { class: "case-cle", "aria-hidden": "true" }, "★") : null,
     h("span", { class: "case-type" }, COURT[s.type] ?? s.type),

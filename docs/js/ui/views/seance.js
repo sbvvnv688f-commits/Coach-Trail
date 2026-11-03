@@ -11,7 +11,7 @@ import { seanceRenfo } from "../../data/exercices.js";
 export function ficheSeance(app, s) {
   const fiche = app.ficheActive();
   const semaine = app.etat.plan.semaines.find((x) => x.numero === s.semaine);
-  const fc = plageFc(s.filiere, fiche.physiologie.fcMax, fiche.regles?.plafondsFc || {});
+  const fc = plageFc(s.filiere, fiche.physiologie.fcMax, fiche.regles?.plafondsFc || {}, fiche.physiologie.zones);
 
   return h("article", { class: "seance", "aria-labelledby": "seance-titre" },
     h("header", { class: "seance-entete" },
@@ -109,7 +109,7 @@ function deplacement(app, s, semaine) {
       libres.map((d) => h("button", { type: "button", class: "puce", onclick: () => app.deplacerSeance(s, d) },
         `${capitaliser(JOURS_LONGS[jourSemaine(d) - 1])} ${Number(d.slice(8))}`))),
     s.deplacee ? h("button", { type: "button", class: "bouton secondaire", onclick: () => app.deplacerSeance(s, s.datePrevue) }, "Remettre au jour prévu") : null,
-    h("p", { class: "discret" }, "Le reste du plan ne bouge pas. Évite d'enchaîner deux séances exigeantes."));
+    h("p", { class: "discret" }, "Le reste du plan ne bouge pas. Évite d'enchaîner deux séances exigeantes. Dans le calendrier, tu peux aussi faire un appui long sur une case puis la glisser vers un autre jour."));
 }
 
 function chiffre(valeur, libelle) {

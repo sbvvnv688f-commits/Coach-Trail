@@ -2,7 +2,8 @@
 
 import { h } from "../dom.js";
 import { fmtAllure, fmtDuree, fmtDateLongue, fmtKm, fmtMetres, JOURS_LONGS } from "../../core/units.js";
-import { ZONES } from "../../core/zones.js";
+import { zonesBpm } from "../../core/zones.js";
+import { formulaireAjustements } from "./ajustements.js";
 
 const ROLES = { qualite: "séance de qualité", endurance: "endurance", cotes: "côtes ou vallonné", longue: "sortie longue" };
 const ALLURES = [["fond", "Fondamental"], ["tempo", "Tempo"], ["seuil", "Seuil"], ["recup", "Récupération"]];
@@ -28,24 +29,33 @@ export function vueAccueil(app) {
 export function vueProfil(app) {
   const f = app.ficheActive();
   const p = f.physiologie;
+  const aj = f.ajustement;
+  const modifier = () => app.ouvrirVolet(formulaireAjustements(app), "ajustements-titre");
+  const ecart = Math.round((aj.facteurPrediction - 1) * 1000) / 10;
   return h("section", { class: "vue vue-profil" },
     h("h1", {}, f.athlete.prenom),
     h("p", { class: "sous-titre" }, `Fiche du ${fmtDateLongue(f.creee)}`),
     erreursImport(app),
 
+    aj.allures || aj.fcMax || aj.zones ? h("div", { class: "encadre attention" },
+      h("b", {}, "Valeurs modifiées dans l'application"), aj.date ? ` le ${fmtDateLongue(aj.date)}` : "", ". ",
+      aj.allures && ecart ? `Temps visés ${ecart < 0 ? "abaissés" : "relevés"} de ${String(Math.abs(ecart)).replace(".", ",")} %. ` : "",
+      "Une nouvelle fiche de ton coach les remplacera.") : null,
+
     h("section", { class: "bloc" },
       h("h2", {}, "Allures de référence sur plat"),
       ALLURES.map(([id, nom]) => h("div", { class: "ligne" },
-        h("span", {}, nom, h("em", {}, p.sourcesAllures[id])),
+        h("span", {}, nom, h("em", {}, aj.allures && p.allures[id] !== aj.origine.allures[id] ? `modifiée · fiche : ${fmtAllure(aj.origine.allures[id])}` : p.sourcesAllures[id])),
         h("b", {}, `${fmtAllure(p.allures[id])} /km`)))),
 
     h("section", { class: "bloc" },
-      h("h2", {}, `Fréquence cardiaque · max ${p.fcMax} bpm${p.fcMaxSource === "estimee" ? " (estimée)" : ""}`),
-      ZONES.map((z) => h("div", { class: "ligne" },
+      h("h2", {}, `Fréquence cardiaque · max ${p.fcMax} bpm${aj.fcMax ? " (modifiée)" : p.fcMaxSource === "estimee" ? " (estimée)" : ""}`),
+      zonesBpm(p.fcMax, p.zones).map((z) => h("div", { class: "ligne" },
         h("span", {}, `${z.nom} · ${z.role}`),
-        h("b", {}, `${Math.round(p.fcMax * z.bas)}-${Math.round(p.fcMax * z.haut)}`))),
+        h("b", {}, `${z.bas}-${z.haut}`))),
       f.regles?.plafondsFc ? h("p", { class: "discret" },
-        `Plafonds : endurance ${f.regles.plafondsFc.endurance ?? "—"} · tempo ${f.regles.plafondsFc.tempo ?? "—"} · seuil ${f.regles.plafondsFc.seuil ?? "—"} bpm`) : null),
+        `Plafonds : endurance ${f.regles.plafondsFc.endurance ?? "—"} · tempo ${f.regles.plafondsFc.tempo ?? "—"} · seuil ${f.regles.plafondsFc.seuil ?? "—"} bpm`) : null,
+      h("button", { type: "button", class: "bouton secondaire", onclick: modifier }, "Modifier allures et zones")),
 
     h("section", { class: "bloc" },
       h("h2", {}, "Disponibilités"),

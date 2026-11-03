@@ -37,13 +37,16 @@ Projet-Casse-Pattes/
 │       │   ├── zones.js          ← zones et plages de FC, plafonds, niveaux d'intensité 1-5
 │       │   ├── session.js        ← blocs → durée, distance, D+, NGP
 │       │   ├── planner.js        ← fiche → phases → semaines → séances ; déplacements
+│       │   ├── ajustements.js    ← allures, FC max et zones modifiées par l'athlète → fiche effective
 │       │   └── predict.js        ← temps visés calibrés sur la course de référence
 │       ├── data/
 │       │   ├── fiche.js          ← validation et normalisation de la fiche athlète
 │       │   ├── textes.js         ← ressentis attendus, explications (génériques)
-│       │   └── exercices.js      ← catalogue de renforcement (générique)
+│       │   ├── exercices.js      ← catalogue de renforcement (générique)
+│       │   └── lexique.js        ← lexique affiché dans les réglages
 │       ├── store/db.js, settings.js, backup.js
-│       └── ui/dom.js, ui/views/  ← calendrier, seance, objectif, profil (+ accueil), reglages
+│       └── ui/dom.js, ui/glisser.js (appui long et glissé), ui/views/ ← calendrier, seance, objectif,
+│                                   profil (+ accueil), ajustements, reglages (+ lexique)
 ├── DEV/
 │   ├── specs/                    ← architecture, roadmap, décisions, fiche-athlete, logo (+ historique/, non publié)
 │   ├── archive/                  ← versions précédentes (non publié)

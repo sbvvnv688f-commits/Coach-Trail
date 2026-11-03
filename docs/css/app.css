@@ -127,6 +127,13 @@ button.case:active { transform: scale(.97); }
 .case.aujourdhui { outline: 2.5px solid var(--bistre); outline-offset: -1px; opacity: 1; }
 .case.aujourdhui .case-num { color: var(--bistre); }
 .case.deplacee { border-style: dashed; border-top-style: solid; }
+/* glissé d'une séance (ui/glisser.js) */
+.grille { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+.grille.glisse-actif .case:not(.cible):not(.source) { opacity: .3; }
+.case.source { opacity: .35; }
+.case.cible { outline: 2px dashed var(--sapin); outline-offset: -2px; opacity: 1; }
+.case.survol { background: var(--sapin-pale); outline-style: solid; }
+.case.fantome { position: fixed; left: 0; top: 0; z-index: 70; margin: 0; pointer-events: none; box-shadow: 0 8px 24px rgba(0, 0, 0, .25); opacity: .95; }
 button.case.course { background: var(--encre); color: var(--papier); border-color: var(--encre); border-top-color: var(--alerte); }
 button.case.course .case-type, button.case.course .case-num, button.case.course .case-dp { color: var(--papier); }
 .resume { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 4px 2px 8px; font-size: .72rem; color: var(--doux); border-bottom: 1px solid var(--trait); }
@@ -170,6 +177,30 @@ button.case.course .case-type, button.case.course .case-num, button.case.course 
 .exercice p { margin: 4px 0 8px; font-size: .86rem; }
 .exercice .eviter { color: var(--alerte); }
 .jours-libres { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ---------- allures et zones ---------- */
+.ligne-saisie { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--trait); font-size: .92rem; }
+.ligne-saisie em { display: block; font-style: normal; color: var(--doux); font-size: .76rem; }
+.allure-saisie { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+.allure-saisie small { color: var(--doux); margin-left: 2px; }
+.saisie {
+  width: 3.4rem; min-height: 44px; text-align: center; font-size: 1.05rem; font-weight: 700;
+  background: var(--carte); border: 1px solid var(--trait); border-radius: 8px; padding: 0 4px;
+}
+.saisie:focus { outline: 2px solid var(--sapin); outline-offset: 1px; }
+.zone-fin { min-width: 3.4rem; color: var(--doux); font-weight: 600; font-size: .86rem; }
+.menu-entree {
+  width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 12px; text-align: left; cursor: pointer;
+  min-height: 56px; background: var(--carte); border: 1px solid var(--trait); border-radius: var(--rayon); padding: 10px 12px;
+}
+.menu-entree em { display: block; font-style: normal; color: var(--doux); font-size: .8rem; margin-top: 2px; }
+.menu-entree svg { flex: none; color: var(--doux); }
+.recherche { width: 100%; min-height: 44px; margin-top: 14px; padding: 0 12px; font-size: 1rem; background: var(--carte); border: 1px solid var(--trait); border-radius: var(--rayon); }
+.lexique { margin: 0; }
+.lexique dt { font-weight: 800; margin-top: 10px; }
+.lexique dd { margin: 2px 0 0; padding-bottom: 10px; border-bottom: 1px solid var(--trait); font-size: .9rem; color: var(--encre); }
+.apercu-temps { font-weight: 700; color: var(--sapin); margin-top: 8px; }
+.ajustements .bouton { margin-top: 12px; }
 
 /* ---------- objectif ---------- */
 .scenario { background: var(--carte); border: 1px solid var(--trait); border-radius: var(--rayon); padding: 12px; margin-top: 8px; }

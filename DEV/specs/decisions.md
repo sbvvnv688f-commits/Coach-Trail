@@ -26,7 +26,10 @@ Une décision validée ne se rediscute que sur un fait nouveau, noté ici.
 | D-18 | 2026-11-03 | Tests et captures avec Chrome sans interface (Edge rend la main au processus ouvert sans rien produire sur ce poste) | Constat technique |
 | D-19 | 2026-11-03 | Contenus génériques (ressentis, exercices) en modules JS dans `docs/js/data/` plutôt qu'en JSON chargé | Mis en cache avec le code, aucun chargement asynchrone |
 | D-20 | 2026-11-03 | Règle d'accès : **détenir la fiche d'un athlète = accéder à son plan et à ses informations** ; rien d'autre n'y donne accès. Plusieurs athlètes possibles sur un même appareil (coach) | Demande de l'utilisateur |
-| D-21 | 2026-11-03 | Athlète à distance : **formulaire PDF remplissable** hors ligne (`DEV/formulaire/`), relu par `DEV/tools/lire-formulaire.py` en brouillon de fiche ; réponses hors dépôt | Choix de l'utilisateur ; contrôles iOS fiables (texte, cases) |
+| D-21 | 2026-11-03 | Athlète à distance : **formulaire PDF remplissable** hors ligne (`DEV/formulaire/`), relu par `DEV/tools/lire-formulaire.py` en brouillon de fiche ; réponses hors dépôt | Choix de l'utilisateur ; contrôles iOS fiables (texte, cases) || D-22 | 2026-11-03 | Allures de référence, FC max et zones **modifiables dans l'application** (Profil). Elles se superposent à la fiche sans la modifier ; plan et temps visés recalculés (temps visés × rapport moyen des allures fond, tempo, seuil). Une nouvelle fiche importée les remplace | Demande de l'utilisateur |
+| D-23 | 2026-11-03 | Déplacement d'une séance aussi par **appui long puis glissé** sur le calendrier, vers un jour libre de la même semaine | Demande de l'utilisateur |
+| D-24 | 2026-11-03 | Lien vers l'ancienne application retiré des réglages (`docs/v4/` reste servi) ; **lexique** consultable depuis les réglages | Demande de l'utilisateur |
+
 ## Ouvertes
 
 | N° | Question | Proposition |

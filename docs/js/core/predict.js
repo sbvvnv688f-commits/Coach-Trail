@@ -23,9 +23,10 @@ export function predireTemps(reference, objectif) {
   return base * (MAJORATION_TECHNICITE[objectif.technicite] ?? 1);
 }
 
-export function scenarios(reference, objectif) {
+// `facteur` : correction issue des allures modifiées par l'athlète (core/ajustements.js), 1 sinon.
+export function scenarios(reference, objectif, facteur = 1) {
   if (!reference) return [];
-  const t = predireTemps(reference, objectif);
+  const t = predireTemps(reference, objectif) * facteur;
   return SCENARIOS.map((s) => ({ ...s, temps: t * s.facteur }));
 }
 

@@ -4,6 +4,7 @@
 import { h, vider, icone, ICONES } from "./ui/dom.js";
 import { validerFiche } from "./data/fiche.js";
 import { genererPlan, appliquerDeplacements } from "./core/planner.js";
+import { appliquerAjustements } from "./core/ajustements.js";
 import { aujourdhui } from "./core/units.js";
 import * as db from "./store/db.js";
 import { lirePref, ecrirePref, testerPrefs } from "./store/settings.js";
@@ -24,6 +25,8 @@ const ONGLETS = [
 const etat = {
   fiches: new Map(),          // id → { brut, fiche }
   actif: null,
+  ficheEffective: null,       // fiche active + ajustements de l'athlète (allures, FC max, zones)
+  ajustements: null,
   plan: null,
   deplacements: {},
   onglet: "calendrier",
@@ -51,10 +54,13 @@ export const app = {
   aller,
   message,
   choisirFichier,
-  ficheActive: () => etat.fiches.get(etat.actif)?.fiche ?? null,
+  ficheActive: () => etat.ficheEffective,
+  ficheOrigine: () => etat.fiches.get(etat.actif)?.fiche ?? null,
   ouvrirSeance,
+  ouvrirVolet,
   fermerVolet,
   deplacerSeance,
+  enregistrerAjustements,
   choisirAthlete,
   supprimerFiche,
   importerTexte,
@@ -63,8 +69,12 @@ export const app = {
 
 // ---------- données ----------
 
+const cleAjustements = (id) => `ajustements:${id}`;
+
 function recalculerPlan() {
-  const fiche = app.ficheActive();
+  const origine = app.ficheOrigine();
+  etat.ficheEffective = origine ? appliquerAjustements(origine, etat.ajustements) : null;
+  const fiche = etat.ficheEffective;
   etat.plan = null;
   if (!fiche) return;
   const plan = genererPlan(fiche);
@@ -87,8 +97,10 @@ async function chargerFiches() {
 
 async function chargerDeplacements() {
   etat.deplacements = {};
+  etat.ajustements = null;
   if (etat.actif) {
     try { etat.deplacements = (await db.lire("deplacements", etat.actif)) || {}; } catch { /* idem */ }
+    try { etat.ajustements = (await db.lire("divers", cleAjustements(etat.actif))) || null; } catch { /* idem */ }
   }
   recalculerPlan();
 }
@@ -115,6 +127,7 @@ async function importerTexte(texte) {
         premier ??= v.fiche.athlete.id;
       }
       for (const [id, d] of Object.entries(json.deplacements || {})) await db.ecrire("deplacements", id, d);
+      for (const [id, a] of Object.entries(json.ajustements || {})) await db.ecrire("divers", cleAjustements(id), a);
       if (premier) await choisirAthlete(premier, false);
       message(erreurs.length ? "Sauvegarde restaurée en partie" : "Sauvegarde restaurée");
       return { ok: !erreurs.length, erreurs };
@@ -123,8 +136,12 @@ async function importerTexte(texte) {
     const v = validerFiche(json);
     if (!v.ok) return v;
     await enregistrerFiche(json, v.fiche);
-    await choisirAthlete(v.fiche.athlete.id, false);
-    message(`Fiche de ${v.fiche.athlete.prenom} importée`);
+    // Une nouvelle fiche du coach fait foi : les allures et zones modifiées dans l'application sont remplacées.
+    const id = v.fiche.athlete.id;
+    const avaitAjustements = await db.lire("divers", cleAjustements(id)).catch(() => null);
+    if (avaitAjustements) await db.supprimer("divers", cleAjustements(id));
+    await choisirAthlete(id, false);
+    message(`Fiche de ${v.fiche.athlete.prenom} importée${avaitAjustements ? " ; tes allures et zones modifiées sont remplacées par celles de la fiche" : ""}`);
     return { ok: true, erreurs: [] };
   } catch (e) {
     return { ok: false, erreurs: [{ chemin: "(stockage)", message: `enregistrement impossible sur cet appareil : ${e.message}` }] };
@@ -164,10 +181,27 @@ async function choisirAthlete(id, afficher = true) {
 async function supprimerFiche(id) {
   await db.supprimer("fiches", id);
   await db.supprimer("deplacements", id);
+  await db.supprimer("divers", cleAjustements(id));
   etat.fiches.delete(id);
   etat.actif = etat.fiches.keys().next().value ?? null;
   await chargerDeplacements();
   message("Fiche supprimée de cet appareil");
+  rendre();
+}
+
+// Allures, FC max et zones modifiées par l'athlète ; null revient aux valeurs de la fiche.
+async function enregistrerAjustements(aj) {
+  etat.ajustements = aj ? { ...aj, date: etat.aujourdhui } : null;
+  let conserve = true;
+  try {
+    if (aj) await db.ecrire("divers", cleAjustements(etat.actif), etat.ajustements);
+    else await db.supprimer("divers", cleAjustements(etat.actif));
+  } catch { conserve = false; }
+  recalculerPlan();
+  fermerVolet();
+  message(conserve
+    ? (aj ? "Plan et temps visés recalculés" : "Valeurs de la fiche rétablies")
+    : "Plan recalculé, mais modification non conservée après fermeture");
   rendre();
 }
 
@@ -252,9 +286,14 @@ let declencheur = null;
 
 function ouvrirSeance(id) {
   const seance = etat.plan?.semaines.flatMap((s) => s.seances).find((s) => s.id === id);
-  if (!seance) return;
+  if (seance) ouvrirVolet(ficheSeance(app, seance), "seance-titre");
+}
+
+// Volet bas générique : `titreId` = id du titre qui nomme la boîte de dialogue.
+function ouvrirVolet(contenu, titreId) {
   declencheur = document.activeElement;
-  vider(el.voletContenu, ficheSeance(app, seance));
+  el.voletContenu.setAttribute("aria-labelledby", titreId);
+  vider(el.voletContenu, contenu);
   el.volet.hidden = false;
   document.body.classList.add("volet-ouvert");
   el.voletContenu.scrollTop = 0;
@@ -322,7 +361,8 @@ async function demarrer() {
   if (ONGLETS.some((o) => o.id === id)) etat.onglet = id;
 
   // Outil de développement, actif uniquement sur le poste local : ?fiche=<fichier> charge une fiche
-  // servie par DEV/tools/serve.py ; ?ouvrir=<date> ouvre la séance de ce jour ; ?jour=<date> fixe la date.
+  // servie par DEV/tools/serve.py ; ?ouvrir=<date> ouvre la séance de ce jour ; ?jour=<date> fixe la date ;
+  // ?cliquer=<sélecteur CSS> clique sur un élément après l'affichage (captures d'un volet).
   if (local) {
     if (p.get("jour")) etat.aujourdhui = p.get("jour");
     if (p.get("fiche")) {
@@ -335,6 +375,7 @@ async function demarrer() {
     const s = etat.plan?.semaines?.flatMap((x) => x.seances).find((x) => x.date === p.get("ouvrir"));
     if (s) ouvrirSeance(s.id);
   }
+  if (local && p.get("cliquer")) document.querySelector(p.get("cliquer"))?.click();
   pret = true;
   if (!local || !p.has("attendre")) enregistrerServiceWorker();
 }

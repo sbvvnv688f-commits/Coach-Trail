@@ -2,7 +2,7 @@
 // VERSION doit être égale à VERSION_APP de js/version.js (vérifié par les tests) : sans changement
 // de version, l'iPhone garde l'ancienne application en cache.
 
-const VERSION = "1.0.1";
+const VERSION = "1.1.0";
 const CACHE = `casse-pattes-${VERSION}`;
 
 const FICHIERS = [
@@ -21,18 +21,22 @@ const FICHIERS = [
   "./js/core/session.js",
   "./js/core/predict.js",
   "./js/core/planner.js",
+  "./js/core/ajustements.js",
   "./js/data/fiche.js",
   "./js/data/textes.js",
   "./js/data/exercices.js",
+  "./js/data/lexique.js",
   "./js/store/db.js",
   "./js/store/settings.js",
   "./js/store/backup.js",
   "./js/ui/dom.js",
+  "./js/ui/glisser.js",
   "./js/ui/views/calendrier.js",
   "./js/ui/views/seance.js",
   "./js/ui/views/objectif.js",
   "./js/ui/views/profil.js",
   "./js/ui/views/reglages.js",
+  "./js/ui/views/ajustements.js",
 ];
 
 self.addEventListener("install", (e) => {

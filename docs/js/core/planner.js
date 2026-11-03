@@ -204,7 +204,7 @@ export function genererPlan(fiche, options = {}) {
   const ratioCourse = objectif.dplus / objectif.distance * 1000;
   const ratioPhase = { base: terrain.dplusParKm, developpement: (terrain.dplusParKm + ratioCourse) / 2, specifique: ratioCourse, affutage: ratioCourse, recuperation: terrain.dplusParKm };
 
-  const prediction = scenarios(fiche.reference, objectif);
+  const prediction = scenarios(fiche.reference, objectif, fiche.ajustement?.facteurPrediction ?? 1);
   const tempsCourse = prediction.find((s) => s.id === "realiste")?.temps ?? null;
 
   // Sortie longue : de ~ 1/3 du volume récent jusqu'à ~ 72 % de la distance de course.
