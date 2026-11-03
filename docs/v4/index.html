@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Coach Trail">
+<meta name="theme-color" content="#16281F">
+<title>Coach Trail</title>
+<style>
+:root{--paper:#F4F3EE;--ink:#16281F;--soft:#5C6B62;--sapin:#2E6B4F;--bistre:#9C6B3F;--alerte:#B03A2E;--rule:#DAD8D0}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+ background:var(--paper);color:var(--ink);font-size:16px;line-height:1.5;overflow:hidden;-webkit-font-smoothing:antialiased}
+.num{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.shell{display:flex;flex-direction:column;height:100vh}
+header{background:var(--ink);padding:calc(.7rem + env(safe-area-inset-top)) 1rem .7rem;flex-shrink:0}
+.who{display:flex;gap:.5rem}
+.who button{flex:1;padding:.5rem;border:1px solid rgba(244,243,238,.25);background:none;
+ color:rgba(244,243,238,.55);border-radius:6px;font-size:.85rem;font-weight:600;font-family:inherit;cursor:pointer}
+.who button[aria-pressed="true"]{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+nav{display:flex;gap:1.1rem;padding:0 1rem;background:var(--ink);flex-shrink:0;overflow-x:auto}
+nav::-webkit-scrollbar{display:none}
+nav button{background:none;border:none;font-family:inherit;cursor:pointer;white-space:nowrap;
+ color:rgba(244,243,238,.5);font-size:.85rem;font-weight:600;padding:.55rem 0;border-bottom:2px solid transparent}
+nav button[aria-selected="true"]{color:var(--paper);border-bottom-color:var(--bistre)}
+main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:1rem 1rem 3rem}
+.panel{display:none}.panel.on{display:block}
+.charge-bars{display:flex;align-items:flex-end;gap:4px;height:56px}
+.charge-bars button{flex:1;background:var(--rule);border:none;border-radius:2px 2px 0 0;cursor:pointer;padding:0}
+.charge-bars button.peak{background:#D9C4AC}
+.charge-bars button.race{background:#E8C4BE}
+.charge-bars button[aria-current="true"].race{background:var(--alerte)}
+.charge-bars button[aria-current="true"]{background:var(--sapin)}
+.charge-bars button[aria-current="true"].peak{background:var(--bistre)}
+.scale{display:flex;justify-content:space-between;font-size:.6rem;color:var(--soft);margin:4px 0 1.1rem}
+.weekhead{display:flex;justify-content:space-between;align-items:baseline;
+ border-bottom:1px solid var(--rule);padding-bottom:.5rem;margin-bottom:.9rem}
+.weekhead h2{font-size:1.15rem;font-weight:700}
+.weekhead .dates{font-size:.75rem;color:var(--soft)}
+.wtot{display:flex;gap:1.3rem;font-size:.72rem;color:var(--soft);margin-bottom:1rem}
+.wtot b{color:var(--ink);font-size:.95rem;font-weight:700;display:block}
+.tag{display:inline-block;font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:3px;margin-bottom:.6rem}
+.tag.light{background:#E4E8E3;color:var(--sapin)}
+.tag.peak{background:#F0E2D2;color:var(--bistre)}
+.tag.race{background:#F5DDD9;color:var(--alerte)}
+.session{width:100%;text-align:left;background:#fff;border:1px solid var(--rule);border-left:3px solid var(--sapin);
+ border-radius:0 8px 8px 0;padding:.75rem .85rem;margin-bottom:.5rem;font-family:inherit;cursor:pointer;display:block;color:inherit}
+.session:active{background:#F7F9F7}
+.session.key{border-left-color:var(--bistre)}
+.session.race{border-left-color:var(--alerte)}
+.session .day{font-size:.7rem;color:var(--soft);font-weight:600}
+.session .title{font-size:.95rem;font-weight:700;margin:1px 0 3px}
+.session .meta{font-size:.78rem;color:var(--soft)}
+.session .meta span{margin-right:.7rem}
+.sheet{position:fixed;inset:0;background:rgba(22,40,31,.5);display:none;align-items:flex-end;z-index:50}
+.sheet.on{display:flex}
+.sheet-in{background:var(--paper);width:100%;max-height:90vh;overflow-y:auto;border-radius:14px 14px 0 0;
+ padding:1.1rem 1.1rem calc(2rem + env(safe-area-inset-bottom))}
+.sheet-top{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:.9rem}
+.sheet-top h3{font-size:1.2rem;font-weight:700;line-height:1.25}
+.sheet-top .sub{font-size:.75rem;color:var(--soft);margin-top:2px}
+.sheet-top button{background:none;border:none;font-size:1.5rem;line-height:1;color:var(--soft);cursor:pointer}
+.figs{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule);
+ border:1px solid var(--rule);border-radius:8px;overflow:hidden;margin-bottom:.9rem}
+.fig{background:#fff;padding:.6rem .4rem;text-align:center}
+.fig b{display:block;font-size:1.05rem;font-weight:700}
+.fig span{font-size:.62rem;color:var(--soft)}
+.block{margin-bottom:.9rem}
+.block h4{font-size:.7rem;color:var(--soft);font-weight:700;margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.03em}
+.block p{font-size:.9rem}
+.step{display:grid;grid-template-columns:3.3rem 1fr;gap:.6rem;padding:.4rem 0;border-bottom:1px solid var(--rule)}
+.step .t{font-size:.8rem;font-weight:700;color:var(--bistre)}
+.step .b{font-size:.85rem}
+.step .b em{display:block;font-style:normal;font-size:.75rem;color:var(--soft);margin-top:1px}
+.ngp{background:#EDF1EE;border-left:3px solid var(--sapin);padding:.6rem .7rem;border-radius:0 6px 6px 0}
+.ngp b{font-size:1.4rem;color:var(--sapin)}
+.ngp span{display:block;font-size:.72rem;color:var(--soft);margin-top:2px}
+.ngp em{font-style:italic}
+.bn{display:inline-block;font-size:.68rem;font-weight:700;color:var(--sapin);
+ background:#E4EDE7;border-radius:3px;padding:0 4px;margin-left:.3rem;vertical-align:1px}
+.feel{background:#EDF1EE;border-left:3px solid var(--sapin);padding:.6rem .7rem;border-radius:0 6px 6px 0;font-size:.85rem}
+.warn{background:#F7EDE8;border-left:3px solid var(--alerte);padding:.6rem .7rem;border-radius:0 6px 6px 0;font-size:.85rem}
+.scen{border:1px solid var(--rule);background:#fff;border-radius:8px;padding:.8rem;margin-bottom:.6rem}
+.scen.pick{border-color:var(--sapin);border-width:2px}
+.scen-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.25rem}
+.scen-top b{font-size:.9rem}.scen-top .t{font-size:1.25rem;font-weight:700}
+.scen p{font-size:.78rem;color:var(--soft)}
+.chk{border-left:2px solid var(--rule);padding-left:.9rem;margin-left:.3rem}
+.chk-item{position:relative;padding-bottom:1rem}
+.chk-item::before{content:"";position:absolute;left:calc(-.9rem - 5px);top:.45em;width:8px;height:8px;border-radius:50%;background:var(--bistre)}
+.chk-item b{font-size:.9rem}.chk-item p{font-size:.8rem;color:var(--soft)}
+label{display:block;font-size:.7rem;color:var(--soft);font-weight:600;margin-bottom:3px}
+input,select,textarea{width:100%;padding:.5rem;border:1px solid var(--rule);border-radius:6px;font-size:1rem;
+ font-family:inherit;background:#fff;color:var(--ink);margin-bottom:.6rem;-webkit-appearance:none}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.paceRow{display:flex;justify-content:space-between;align-items:center;
+ padding:.45rem 0;border-bottom:1px solid var(--rule)}
+.paceRow label{margin:0;font-size:.85rem;color:var(--ink);font-weight:600}
+.paceIn{display:flex;align-items:center;gap:.2rem}
+.paceIn input{width:3.1rem;margin:0;text-align:center;font-variant-numeric:tabular-nums;padding:.4rem .2rem}
+.paceIn input::-webkit-outer-spin-button,.paceIn input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.paceIn span{font-size:.85rem;color:var(--soft)}
+button.act{width:100%;padding:.7rem;border:none;border-radius:6px;background:var(--sapin);
+ color:var(--paper);font-size:.9rem;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:.5rem}
+button.act.ghost{background:#fff;color:var(--sapin);border:1px solid var(--rule)}
+.opt{display:block;text-align:left;background:#fff;border:1px solid var(--rule);border-radius:8px;
+ padding:.6rem;font-family:inherit;color:inherit;cursor:pointer;margin-bottom:.6rem;width:100%}
+.opt.on{border-color:var(--sapin);border-width:2px;padding:calc(.6rem - 1px)}
+.opt b{display:block;font-size:.9rem;font-weight:700}
+.opt span{font-size:.72rem;color:var(--soft)}
+.zrow{display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid var(--rule);font-size:.85rem}
+.zrow span{color:var(--soft)}
+h3.sec{font-size:.95rem;font-weight:700;margin:1.2rem 0 .6rem}
+.drop{width:100%;display:block;text-align:left;background:#fff;border:1px dashed var(--sapin);
+ border-radius:8px;padding:1rem;font-family:inherit;color:inherit;cursor:pointer;margin-bottom:1rem}
+.drop.over{background:#EDF3EF}
+.drop b{display:block;font-size:.95rem;font-weight:700}
+.drop span{font-size:.78rem;color:var(--soft)}
+.split{display:grid;grid-template-columns:2rem 1fr auto;gap:.6rem;align-items:center;
+ padding:.35rem 0;border-bottom:1px solid var(--rule);font-size:.82rem}
+.split .kmno{color:var(--soft);font-size:.75rem}
+.split .bar{height:6px;background:var(--rule);border-radius:3px;overflow:hidden}
+.split .bar i{display:block;height:100%;background:var(--sapin)}
+.split .bar i.slow{background:var(--bistre)}
+.split .val{text-align:right;white-space:nowrap}
+.split .val em{font-style:normal;color:var(--soft);font-size:.72rem;margin-left:.4rem}
+.cmp{display:grid;grid-template-columns:1fr auto auto;gap:.6rem;padding:.4rem 0;border-bottom:1px solid var(--rule);font-size:.85rem}
+.cmp span{color:var(--soft)}.cmp .ok{color:var(--sapin);font-weight:700}.cmp .off{color:var(--bistre);font-weight:700}
+.log{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:.6rem;margin-bottom:.4rem;font-size:.85rem}
+.log .meta{font-size:.75rem;color:var(--soft);margin-top:2px}
+.empty{font-size:.85rem;color:var(--soft);padding:1rem 0;text-align:center}
+.lex{border-bottom:1px solid var(--rule);padding:.6rem 0}
+.lex b{display:block;font-size:.9rem}
+.lex p{font-size:.83rem;color:var(--soft)}
+.lex .me{font-size:.78rem;color:var(--bistre);font-weight:600;margin-top:2px}
+.banner{background:#F7EDE8;border:1px solid var(--alerte);border-radius:8px;padding:.7rem;font-size:.82rem;margin-bottom:1rem}
+.toast{position:fixed;bottom:calc(1.5rem + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+ background:var(--ink);color:var(--paper);padding:.6rem 1.1rem;border-radius:6px;font-size:.85rem;z-index:99;max-width:90%}
+:focus-visible{outline:2px solid var(--bistre);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header><div class="who">
+    <button onclick="setAth('edgar')" aria-pressed="true" id="wE">Edgar</button>
+    <button onclick="setAth('laurie')" aria-pressed="false" id="wL">Laurie</button>
+  </div></header>
+  <nav>
+    <button onclick="setTab('plan')" aria-selected="true" id="tPlan">Plan</button>
+    <button onclick="setTab('goal')" aria-selected="false" id="tGoal">Objectif</button>
+    <button onclick="setTab('log')" aria-selected="false" id="tLog">Carnet</button>
+    <button onclick="setTab('renfo')" aria-selected="false" id="tRenfo">Renfo</button>
+    <button onclick="setTab('lex')" aria-selected="false" id="tLex">Lexique</button>
+    <button onclick="setTab('me')" aria-selected="false" id="tMe">Réglages</button>
+  </nav>
+  <main>
+    <section id="plan" class="panel on">
+      <div id="warnStore"></div>
+      <div class="charge-bars" id="bars"></div>
+      <div class="scale"><span>7 sept</span><span>charge hebdomadaire</span><span>1 nov</span></div>
+      <div class="weekhead"><h2 id="wkTitle"></h2><div class="dates num" id="wkDates"></div></div>
+      <div id="wkTag"></div>
+      <div class="wtot">
+        <div><b class="num" id="wkKm"></b>volume</div>
+        <div><b class="num" id="wkD"></b>dénivelé +</div>
+        <div><b class="num" id="wkH"></b>temps</div>
+      </div>
+      <div id="sessions"></div>
+    </section>
+    <section id="goal" class="panel"></section>
+    <section id="log" class="panel">
+      <button class="drop" id="drop" onclick="pick.click()">
+        <b>Importer une séance Suunto</b>
+        <span>Export JSON de la montre. Touche pour choisir le fichier.</span>
+      </button>
+      <input type="file" id="pick" accept=".json,application/json" hidden>
+      <div id="suuntoOut"></div>
+      <h3 class="sec">Ou saisir à la main</h3>
+      <label for="lDate">Date</label><input type="date" id="lDate">
+      <label for="lType">Séance</label>
+      <select id="lType"><option value="">Choisir</option><option>Seuil</option><option>Côtes</option>
+        <option>Endurance</option><option>Appoint</option><option>Sortie longue</option><option>Natation</option></select>
+      <div class="pair">
+        <div><label for="lKm">Distance (km)</label><input type="number" step="0.1" id="lKm"></div>
+        <div><label for="lMin">Durée (min)</label><input type="number" id="lMin"></div>
+        <div><label for="lD">D+ (m)</label><input type="number" id="lD"></div>
+        <div><label for="lFc">FC moyenne</label><input type="number" id="lFc"></div>
+      </div>
+      <label for="lNote">Sensations, douleurs</label><input type="text" id="lNote" placeholder="Jambe gauche, fatigue, météo…">
+      <button class="act" onclick="saveLog()">Enregistrer la séance</button>
+      <h3 class="sec">Séances enregistrées</h3>
+      <div id="logList"></div>
+    </section>
+    <section id="renfo" class="panel"></section>
+    <section id="lex" class="panel"></section>
+    <section id="me" class="panel">
+      <div id="warnStore2"></div>
+      <h3 class="sec">Allures de référence sur plat</h3>
+      <div id="paces"></div>
+      <label for="aFc">Fréquence cardiaque maximale (bpm)</label><input type="number" id="aFc">
+      <button class="act" onclick="saveMe()">Enregistrer</button>
+      <div id="rythme"></div>
+      <div id="zones"></div>
+      <h3 class="sec">Sauvegarde</h3>
+      <p style="font-size:.8rem;color:var(--soft);margin-bottom:.6rem">
+        Copie ce texte pour conserver tes réglages ailleurs, ou colle-en un pour les restaurer.</p>
+      <textarea id="backup" rows="3" style="font-size:.75rem"></textarea>
+      <button class="act ghost" onclick="doBackup()">Afficher mes réglages</button>
+      <button class="act ghost" onclick="doRestore()">Restaurer depuis le texte</button>
+    </section>
+  </main>
+</div>
+<div class="sheet" id="sheet" onclick="if(event.target===this)closeSheet()"><div class="sheet-in" id="sheetIn"></div></div>
+<script>
+/* ===== calendrier ===== */
+var DATES=["7 – 13 sept","14 – 20 sept","21 – 27 sept","28 sept – 4 oct",
+           "5 – 11 oct","12 – 18 oct","19 – 25 oct","26 oct – 1 nov"];
+
+/* ===== paramètres du plan =====
+   seuil : [répétitions, minutes par bloc, filière]
+   cotes : [répétitions, minutes de montée]
+   ef    : minutes d'endurance fondamentale
+   ap    : minutes de la séance d'appoint (0 = pas d'appoint cette semaine)
+   lg    : [km, D+] de la sortie longue                                  */
+var PAR={
+ edgar:{vasc:1300,
+  seuil:[[2,8,"tempo"],[3,8,"tempo"],[2,12,"tempo"],[2,8,"tempo"],
+         [3,10,"seuil"],[2,15,"seuil"],[1,20,"tempo"],[3,3,"seuil"]],
+  cotes:[[6,2],[7,2],[8,2],[5,2],[6,3],[8,3],[6,2],[4,1.5]],
+  cible:[68,74,80,64,88,90,74,55],
+  ef:[60,66,74,54,84,82,64,40],
+  ap:[40,42,45,0,0,0,35,0],
+  lg:[[15,500],[17,600],[20,700],[14,480],[23,800],[26,900],[19,650],[42,1200]],
+  jours:["Lundi","Mercredi","Jeudi","Vendredi","Dimanche"],ech:30},
+ laurie:{vasc:900,
+  seuil:[[2,6,"tempo"],[2,8,"tempo"],[3,7,"tempo"],[2,6,"tempo"],
+         [3,8,"tempo"],[3,8,"tempo"],[2,6,"tempo"],[3,3,"tempo"]],
+  cotes:[[5,1.5],[6,1.5],[7,1.5],[5,1.5],[6,2],[7,2],[5,1.5],[4,1]],
+  cible:[58,58,60,50,60,60,55,45],
+  ef:[50,55,60,45,60,60,50,35],
+  lg:[[9,180],[11,230],[13,280],[10,180],[15,350],[17,430],[13,280],[20,600]],
+  jours:["Jour 1","Jour 2","Jour 3","Week-end"],ech:15}
+};
+
+/* ===== ressenti attendu par filière ===== */
+var FEEL={
+ fond:"Respiration facile. Tu dois pouvoir tenir une conversation par phrases entières. Si ce n'est pas le cas, ralentis.",
+ tempo:"Effort soutenu mais maîtrisé. Quelques mots passent, pas une phrase. Tu finis en te disant que tu aurais pu tenir deux minutes de plus, pas dix.",
+ seuil:"Franchement inconfortable. Tu comptes les minutes, la respiration est ample et rapide, mais la foulée reste propre jusqu'au bout.",
+ recup:"Très facile, presque frustrant de lenteur. Aucun essoufflement, aucune tension musculaire. C'est le but.",
+ cote:"Souffle court en haut, cuisses qui brûlent, mais foulée qui reste tonique et regard devant. Si tu te casses en deux, la pente est trop raide ou l'allure trop rapide.",
+ longue:"Facile pendant la première heure, puis c'est la durée qui pèse, jamais l'allure. Tu dois finir en te sentant capable d'aller plus loin.",
+ course:"Les deux premières heures doivent sembler trop lentes. Cette impression est le seul garde-fou contre l'effondrement du dernier tiers.",
+ nat:"Aisance respiratoire, aucun forçage. La séance sert la récupération autant que le volume aérobie."
+};
+
+/* ===== objectifs ===== */
+var GOAL={
+ edgar:{race:"42 km · 1200 m D+",eq:54,
+  sc:[["Ambitieux","4h25","4'55/km sur plat équivalent. Suppose une préparation sans accroc."],
+      ["Réaliste","4h45","5'17/km. La cible autour de laquelle construire la stratégie de course."],
+      ["Repli","5h10","5'45/km. Gestion prudente si la jambe gauche se manifeste."]],
+  chk:[["Fin semaine 3 — 27 septembre","Sortie de 21 km. Ce qui compte : l'allure d'effort à fréquence cardiaque contenue, et l'état de la jambe gauche le lendemain."],
+       ["Fin semaine 6 — 18 octobre","Sortie de 28 km avec 750 m de D+. C'est le vrai prédicteur : son chrono fixe la cible définitive."]],
+  tbl:[["2h30","≈ 3h59"],["2h45","≈ 4h23"],["3h00","≈ 4h47"]],
+  note:"Projection à partir du chrono de la semaine 6 sur 26 km et 900 m de D+.",
+  warn:"Ta sortie du 13 septembre — 16,4 km et 615 m de D+ en 1h41 à 76 % de ta fréquence maximale — déplace nettement ces cibles vers le haut. Les 4h ne sont plus hors d'atteinte : il faudrait boucler la semaine 6 autour de 2h30. La sortie de 26 km du 18 octobre tranchera."},
+ laurie:{race:"20 km · environ 600 m D+",eq:26,
+  sc:[["Ambitieux","3h10","7'20/km sur plat équivalent."],
+      ["Réaliste","3h25","8'00/km. La cible de travail."],
+      ["Repli","3h40","8'30/km, gestion prudente des genoux."]],
+  chk:[["Fin semaine 3 — 27 septembre","Sortie de 14 km. Référence d'allure et état des genoux le lendemain."],
+       ["Fin semaine 6 — 18 octobre","Sortie de 18 km avec les semelles. Fixe la cible définitive."]],
+  tbl:[["2h10","≈ 3h05"],["2h25","≈ 3h25"],["2h40","≈ 3h45"]],
+  note:"Projection à partir du chrono de la semaine 6 sur 18 km et 450 m de D+.",
+  warn:"Le dénivelé du 20 km est estimé à 600 m. À confirmer sur le profil officiel : il déplace la cible de plusieurs minutes."}
+};
+
+/* ===== lexique ===== */
+var LEX=[
+ ["Allure fondamentale","Le rythme de base, celui de la majorité du volume. Assez lent pour parler sans gêne. C'est l'allure qui construit l'endurance, pas celle qui impressionne.","Edgar 6'18 · Laurie 8'00"],
+ ["Allure tempo","Effort soutenu mais tenable longtemps, autour de 80-88 % de la fréquence maximale. Sert à repousser le moment où l'effort devient coûteux.","Edgar 5'30 · Laurie 7'30"],
+ ["Seuil","La frontière au-delà de laquelle l'organisme ne parvient plus à évacuer ce qu'il produit. Travailler juste en dessous déplace cette frontière.","Edgar 5'06 · Laurie 7'12"],
+ ["Allure d'effort","Allure corrigée du dénivelé, affichée par la Suunto. Elle traduit ce que tu aurais couru sur plat pour le même effort, ce qui rend deux séances comparables malgré des terrains différents.",""],
+ ["Distance équivalente","Convention pour comparer des parcours : on ajoute 1 km par 100 m de dénivelé positif. Le 42 km avec 1200 m D+ pèse donc comme 54 km de plat.",""],
+ ["D+ et D−","Dénivelé positif (ce qui monte) et négatif (ce qui descend). Le D+ fatigue, le D− casse : c'est lui qui provoque courbatures et blessures.",""],
+ ["Vitesse ascensionnelle","Mètres de dénivelé gravis par heure. Sert à convertir une durée de montée en D+.","Edgar ≈ 1300 m/h · Laurie ≈ 900 m/h"],
+ ["Zones de fréquence cardiaque","Découpage de l'effort en cinq intensités, calculées depuis la fréquence maximale. Elles servent de contrôle quand les sensations trompent.",""],
+ ["Endurance fondamentale","Séance longue et lente, sans bloc rapide. La plus ennuyeuse et la plus rentable. La courir trop vite est l'erreur la plus fréquente.",""],
+ ["Séance d'appoint","Sortie très souple qui ajoute du volume aérobie sans fatigue. Première à sauter en cas de doute.",""],
+ ["Fractionné en côte","Répétitions de montée séparées par des descentes de récupération. Développe la force spécifique et l'économie de foulée.",""],
+ ["Sortie longue","La séance qui décide de la course. Elle habitue le corps à durer, teste la nutrition, le matériel et la tête.",""],
+ ["Répétition générale","Sortie où tout est testé en conditions réelles : tenue, chaussures, sac, ravitaillement, horaire. Ici, la semaine 6.",""],
+ ["Semaine allégée","Baisse volontaire du volume pour laisser le corps assimiler. C'est pendant le repos que les progrès se fixent, pas pendant l'effort.",""],
+ ["Pic de charge","La semaine la plus lourde du plan. Suivie obligatoirement d'une décroissance.",""],
+ ["Affûtage","Réduction progressive du volume avant la course, à intensité maintenue. On perd un peu de forme apparente, on gagne beaucoup de fraîcheur.",""],
+ ["Règle des 10 %","Le volume hebdomadaire n'augmente pas de plus de 10 % d'une semaine sur l'autre. Au-delà, le risque de blessure grimpe plus vite que la forme.",""],
+ ["Travail excentrique","Renforcement où le muscle s'allonge sous charge, comme les mollets sur une marche. C'est la meilleure protection contre les récidives tendineuses.",""],
+ ["Proprioception","Travail d'équilibre sur plan instable. Améliore la stabilité de la cheville sur terrain irrégulier.",""],
+ ["Dérive cardiaque","Fréquence qui monte alors que l'allure reste constante. Signe de fatigue, de déshydratation ou de chaleur. Visible dans le carnet après import.",""],
+ ["Tour automatique","Découpage de la séance par la montre à chaque kilomètre. Indispensable pour lire où le terrain a coûté.",""]
+];
+
+/* ===== progression du travail de descente =====
+   Le D− est le facteur de casse d'un urban trail : freinage répété, escaliers,
+   revêtement dur. Il se construit par paliers, jamais d'un coup. */
+var DESC={
+ edgar:[
+  "Trottinées, pose de pied douce. On récupère, on ne travaille pas encore",
+  "Trottinées, cadence légèrement plus élevée, petits pas",
+  "Deux descentes sur les six menées un peu plus vite, le reste en récupération",
+  "Trottinées souples : semaine allégée, aucune sollicitation en freinage",
+  "La moitié des descentes en appui actif, buste légèrement en avant",
+  "Toutes les descentes en appui actif : c'est le pic du travail excentrique",
+  "Retour en trottinées souples : la fraîcheur prime désormais",
+  "Marchées. Plus aucune contrainte de freinage avant la course"],
+ laurie:[
+  "Trottinées, pose de pied douce",
+  "Trottinées souples, petits pas",
+  "Trottinées, cadence un peu plus élevée",
+  "Trottinées souples : semaine allégée",
+  "Trottinées, deux descentes en appui un peu plus actif",
+  "Trottinées, la moitié en appui actif",
+  "Trottinées souples",
+  "Marchées"]
+};
+
+/* ===== renforcement ===== */
+var RENFO={
+ edgar:{
+  intro:"Ton historique — tendinite du genou et tendon d'Achille gauche, crampes de mollet — désigne le tendon "+
+    "comme facteur limitant, pas le cardio. Le travail excentrique est la seule prévention dont l'efficacité soit "+
+    "établie sur les tendinopathies achilléennes. Deux séances par semaine, 15 à 20 minutes, "+
+    "enchaînées directement après la course pendant que le corps est chaud.",
+  seances:[
+   {nom:"Séance A — force",quand:"Mercredi, après les côtes",duree:"18 min",
+    but:"Développer la force en montée et la résistance au freinage en descente.",
+    ex:[
+     {n:"Mollets excentriques sur marche",s:"3 × 15 par jambe",
+      t:"Montée sur les deux pieds, descente sur un seul en 3 secondes, talon sous le niveau de la marche.",
+      e:"Descendre trop vite. La lenteur est le stimulus, pas la charge.",
+      w:"Le seul exercice non négociable de ta liste. Commence par la jambe gauche pour lui donner tes forces intactes."},
+     {n:"Chaise contre un mur",s:"3 × 45 s",
+      t:"Dos plaqué, cuisses parallèles au sol, poids sur les talons.",
+      e:"Remonter le bassin quand ça brûle. Descends plutôt la durée que la position.",
+      w:"Prépare le quadriceps au freinage répété des escaliers stéphanois."},
+     {n:"Fentes marchées",s:"3 × 12 par jambe",
+      t:"Grand pas, genou arrière proche du sol, buste droit. Le genou avant ne dépasse pas la pointe du pied.",
+      e:"Pas trop court, qui reporte la charge sur le genou au lieu de la fesse.",
+      w:"Force en montée, et stabilité du bassin en fin de course."},
+     {n:"Gainage ventral",s:"3 × 45 s",
+      t:"Appui sur les avant-bras, corps aligné des talons à la nuque.",
+      e:"Bassin qui s'affaisse ou fesses relevées.",
+      w:"Une foulée tient par le tronc quand les jambes ne suivent plus."}]},
+   {nom:"Séance B — stabilité",quand:"Jeudi, après l'endurance",duree:"15 min",
+    but:"Protéger la cheville et le genou sur terrain irrégulier, corriger les déséquilibres droite-gauche.",
+    ex:[
+     {n:"Mollets excentriques, jambe gauche seule",s:"3 × 15",
+      t:"Même exécution qu'en séance A, sur la jambe gauche uniquement.",
+      e:"Sauter la séance quand tout va bien. C'est précisément là qu'elle sert.",
+      w:"Dose supplémentaire sur le côté fragile. C'est ce rattrapage qui fait la différence sur huit semaines."},
+     {n:"Pont fessier sur une jambe",s:"3 × 12 par jambe",
+      t:"Allongé sur le dos, une jambe tendue, monter le bassin par la fesse d'appui.",
+      e:"Pousser avec le bas du dos plutôt qu'avec la fesse.",
+      w:"Un fessier faible transfère la charge sur les ischio-jambiers, puis sur le mollet."},
+     {n:"Gainage latéral",s:"3 × 40 s par côté",
+      t:"Appui sur l'avant-bras et le pied, corps aligné vu de face.",
+      e:"Bassin qui recule, ce qui transforme l'exercice en position de repos.",
+      w:"Tient le bassin sur les appuis instables des sentiers."},
+     {n:"Équilibre sur plan instable",s:"3 × 45 s par jambe",
+      t:"Sur ton plan instable, genou légèrement fléchi. Yeux ouverts, puis fermés quand c'est acquis.",
+      e:"Se rattraper au mur. Mieux vaut réduire la durée et rester autonome.",
+      w:"Réduit le risque d'entorse, et améliore la vitesse en descente technique."}]}],
+  prog:[
+   ["Semaines 1 à 3","Installer le geste. Aucune charge additionnelle. Chercher la lenteur sur les descentes de mollet, la stabilité sur le reste. Si des courbatures apparaissent au tendon plutôt qu'au muscle, réduis à deux séries."],
+   ["Semaines 4 à 6","Ajouter une quatrième série sur le mollet excentrique, ou un sac à dos lesté de 5 kg. Porter le gainage à 60 secondes. Les fentes passent à 15 répétitions."],
+   ["Semaines 7 et 8","Maintenir le mollet excentrique à l'identique, alléger tout le reste de moitié. Arrêter complètement le renforcement les cinq jours précédant la course."]],
+  regle:"Une douleur tendineuse qui persiste le lendemain matin impose de sauter la séance suivante. "+
+    "Une gêne musculaire diffuse, non."},
+ laurie:{
+  intro:"La sensibilité des genoux se traite en amont, par la hanche. Un genou douloureux en descente est presque "+
+    "toujours un genou insuffisamment tenu par le moyen fessier et le quadriceps. Deux séances par semaine, "+
+    "15 minutes, juste après la course.",
+  seances:[
+   {nom:"Séance A — force",quand:"Jour 2, après les côtes",duree:"15 min",
+    but:"Renforcer le quadriceps et la chaîne latérale qui stabilisent le genou en descente.",
+    ex:[
+     {n:"Chaise contre un mur",s:"3 × 45 s",
+      t:"Dos plaqué, cuisses parallèles au sol, poids sur les talons.",
+      e:"Genoux qui rentrent vers l'intérieur.",
+      w:"Le quadriceps est le premier amortisseur du genou en descente."},
+     {n:"Montées sur marche",s:"3 × 12 par jambe",
+      t:"Monter sur une marche basse en poussant sur la jambe d'appui, redescendre lentement en 3 secondes.",
+      e:"S'aider de l'élan de la jambe libre.",
+      w:"La descente lente est la partie utile : c'est le geste de la descente en course."},
+     {n:"Abduction de hanche en appui latéral",s:"3 × 15 par côté",
+      t:"Allongée sur le côté, jambe supérieure tendue montée lentement.",
+      e:"Basculer le bassin en arrière pour tricher.",
+      w:"Le moyen fessier empêche le genou de s'effondrer vers l'intérieur à chaque appui."},
+     {n:"Gainage ventral",s:"3 × 40 s",
+      t:"Appui sur les avant-bras, corps aligné.",e:"Bassin qui s'affaisse.",w:""}]},
+   {nom:"Séance B — stabilité",quand:"Jour 3, après l'endurance",duree:"12 min",
+    but:"Équilibre, proprioception et chaîne postérieure.",
+    ex:[
+     {n:"Pont fessier sur une jambe",s:"3 × 12 par jambe",
+      t:"Monter le bassin par la fesse d'appui, jambe libre tendue.",
+      e:"Pousser avec le bas du dos.",w:""},
+     {n:"Gainage latéral",s:"3 × 35 s par côté",
+      t:"Appui sur l'avant-bras et le pied, corps aligné vu de face.",e:"Bassin qui recule.",w:""},
+     {n:"Équilibre sur plan instable",s:"3 × 45 s par jambe",
+      t:"Genou légèrement fléchi, yeux ouverts puis fermés.",e:"Se rattraper au mur.",
+      w:"Protège la cheville sur les appuis irréguliers."},
+     {n:"Mollets sur marche",s:"2 × 15 par jambe",
+      t:"Montée sur deux pieds, descente lente sur un seul.",e:"Descendre trop vite.",
+      w:"Prévention générale, moins prioritaire que pour Edgar mais utile."}]}],
+  prog:[
+   ["Semaines 1 à 3","Installer le geste, sans charge. Priorité à la qualité d'exécution sur le nombre."],
+   ["Semaines 4 à 6","Porter le gainage à 50 secondes, passer les montées sur marche à 15 répétitions."],
+   ["Semaines 7 et 8","Réduire de moitié. Arrêter cinq jours avant la course."]],
+  regle:"Une douleur vive au genou pendant un exercice impose de l'arrêter, pas de le poursuivre en serrant les dents."}
+};
+
+/* ===== relief du terrain =====
+   Peu de terrain plat disponible : chaque sortie porte un dénivelé structurel,
+   environ 35 m par km, mesuré sur la sortie du 13 septembre (615 m sur 16,4 km).
+   Convention : 2 min de plus par 100 m de D+. Sur une boucle, la descente
+   récupère une partie du temps perdu en montée — calibré sur la sortie du
+   13 septembre : 16,4 km et 615 m en 1h41. */
+var TERRAIN=35;
+function terrainPace(base){return base+TERRAIN/100*2}
+var DEF={edgar:{fond:5.65,tempo:5.05,seuil:4.7,recup:6.5,fc:198},
+         laurie:{fond:8.0,tempo:7.5,seuil:7.2,recup:8.5,fc:185}};
+var ath="edgar",wk=0,me=JSON.parse(JSON.stringify(DEF)),logs=[],appoint=true,last=null,STORE=true;
+
+/* ===== stockage vérifié ===== */
+function testStore(){
+  try{localStorage.setItem("ct_test","1");
+      if(localStorage.getItem("ct_test")!=="1")return false;
+      localStorage.removeItem("ct_test");return true}
+  catch(e){return false}
+}
+function put(k,v){if(!STORE)return false;try{localStorage.setItem(k,v);return true}catch(e){return false}}
+function get(k){if(!STORE)return null;try{return localStorage.getItem(k)}catch(e){return null}}
+
+STORE=testStore();
+if(STORE){
+  var s1=get("ct_allures");if(s1){try{me=JSON.parse(s1)}catch(e){}}
+  var s2=get("ct_carnet");if(s2){try{logs=JSON.parse(s2)}catch(e){}}
+  var s3=get("ct_appoint");if(s3!==null)appoint=(s3==="1");
+}
+function storeWarn(){
+  return STORE?"":'<div class="banner"><b>Les réglages ne seront pas conservés ici.</b><br>'+
+   "Cette fenêtre n'autorise pas le stockage local. Ouvre l'application depuis son adresse GitHub Pages, "+
+   "puis ajoute-la à l'écran d'accueil par le bouton Partager de Safari. En attendant, "+
+   "utilise la zone Sauvegarde en bas des réglages pour conserver tes allures.</div>";
+}
+
+/* ===== allures : conversion ===== */
+function pace(f){return me[ath][f]}
+function mmss(p){if(!p||!isFinite(p))return "—";var m=Math.floor(p);
+  return m+"'"+String(Math.round((p-m)*60)).padStart(2,"0")}
+function parsePace(s){
+  if(!s)return null;s=String(s).replace(",",".").trim();
+  var m=s.match(/^(\d+)\s*['h:]\s*(\d{1,2})$/);
+  if(m)return parseInt(m[1])+parseInt(m[2])/60;
+  var f=parseFloat(s);return isFinite(f)?f:null;
+}
+function hm(mn){mn=Math.round(mn);var h=Math.floor(mn/60),m=mn%60;
+  return h?h+"h"+String(m).padStart(2,"0"):m+" min"}
+
+/* ===== construction des séances depuis les blocs ===== */
+function build(){
+  var p=PAR[ath],a=me[ath],out=[],i=wk;
+  var ech=p.ech,cote=a.fond+3.2,desc=a.tempo+0.1;
+
+  /* séance de qualité */
+  var q=p.seuil[i],n=q[0],d=q[1],f=q[2];
+  var b=[[ech,"fond","Échauffement progressif","Départ très souple, les 2 km de route inclus"]];
+  for(var j=0;j<n;j++){
+    b.push([d,f,"Bloc "+(j+1)+" sur "+n+" à allure "+f,"Allure "+mmss(a[f])+"/km, régulière du début à la fin"]);
+    if(j<n-1)b.push([3,"recup","Trot de récupération","Assez lent pour que le souffle redescende"]);
+  }
+  var used=ech+n*d+(n-1)*3+10;
+  var liaQ=Math.max(5,Math.round(p.cible[i]-used));
+  b.push([liaQ,"terrainFond","Footing de liaison","Sur le relief du secteur, allure facile"]);
+  b.push([10,"recup","Retour au calme","Foulée relâchée"]);
+  out.push(mk(p.jours[0],(f==="seuil"?"Seuil ":"Tempo ")+n+" × "+d+" min",b,60,f,
+    i===7?"Court et vif : réveiller la foulée sans créer de fatigue.":
+    (i===0?"Première séance de qualité. Reste sous tes sensations : la marge se prend plus tard.":"")));
+
+  /* côtes */
+  var c=p.cotes[i],up=c[0]*c[1],dn=up*0.8,dnEach=dn/c[0],dplus=Math.round(up/60*p.vasc);
+  var bc=[[ech,"fond","Échauffement progressif","Jusqu'au pied de la côte, sans forcer"]];
+  bc.push([up,"cote",c[0]+" montées de "+c[1]+" min","Course soutenue, pas sprint. La dernière doit ressembler à la première"]);
+  bc.push([dn,"desc",c[0]+" descentes",DESC[ath][i]]);
+  var liaC=Math.max(5,Math.round(p.cible[i]-(ech+up+dn+10)));
+  bc.push([liaC,"terrainFond","Footing de liaison","Sur le relief du secteur, allure facile"]);
+  bc.push([10,"recup","Retour au calme","Puis 15 min de renforcement"]);
+  var cadNote=ath==="edgar"?
+    "En montée, vise 160 à 170 pas par minute : petits pas, pied qui repart vite, plutôt que la poussée puissante "+
+    "et la foulée longue qu'un sprinteur a naturellement envie de produire. Au-delà d'environ 15-18 % de pente, "+
+    "marcher vite devient plus économique que courir — et bien plus protecteur pour l'Achille : marcher n'est pas un aveu de faiblesse.":"";
+  var sc=mk(p.jours[1],"Côtes "+c[0]+" × "+(c[1]===1.5?"90 s":c[1]===1?"60 s":c[1]+" min"),bc,dplus,"cote",
+    (i===5?"Séance de côtes la plus lourde du plan. ":
+    (ath==="laurie"?"Descente en trottinant souple : les genoux ne travaillent pas en freinage sur cette séance. ":""))
+    +cadNote);
+  out.push(sc);
+
+  /* endurance fondamentale, sur le relief du secteur */
+  var efKm=p.ef[i]/terrainPace(a.fond),efDp=Math.round(efKm*TERRAIN);
+  out.push(mk(p.jours[2],"Endurance fondamentale",
+    [[p.ef[i],"terrainFond","Footing continu","Sur le relief habituel, sans chercher les plus grosses côtes du secteur"]],efDp,"fond",
+    ath==="edgar"?
+    (i<3?"Travaille la cadence : vise 170 à 180 pas par minute, affichés par la Race. Un ancien sprinteur "+
+      "garde une foulée longue et bondissante, coûteuse sur 42 km. Raccourcir le pas et augmenter la fréquence "+
+      "réduit le temps de contact au sol et ménage l'Achille. Sur ce terrain, l'allure sera plus lente qu'en plaine : "+
+      "vise la sensation, pas le chiffre.":
+     "Cette séance ne doit jamais être rapide. Si tu finis essoufflé, elle est ratée : c'est elle qui construit ton point faible. "+
+      "Garde un œil sur la cadence, 170 à 180 pas par minute."):
+    "Allure facile du début à la fin. C'est la séance qui bâtit l'endurance, pas celle où l'on se teste."));
+
+  /* appoint, Edgar seulement */
+  if(ath==="edgar"&&appoint&&p.ap[i]){
+    var apKm=p.ap[i]/terrainPace(a.recup),apDp=Math.round(apKm*TERRAIN);
+    out.push(mk(p.jours[3],"Appoint — endurance souple",
+      [[p.ap[i],"terrainRecup","Footing très souple","Plus lent que la veille, sur le même relief modéré"]],apDp,"recup",
+      i===5?"Semaine du pic : si tu dois choisir, garde dimanche frais et supprime cette séance.":
+      "Séance d'appoint : la première à sacrifier au moindre signal de la jambe gauche."));
+  }
+
+  /* sortie longue */
+  var l=p.lg[i],race=(i===7);
+  /* au-delà de 30 km l'allure se dégrade : fatigue, ravitaillement, gestion */
+  var usure=race?1.15:(l[0]>22?1.05:1);
+  var lmn=l[0]*a.fond*usure+l[1]/100*2,bl=[],extra="";
+  if(race){
+    bl=[[lmn,"course",l[0]+" km avec "+l[1]+" m de D+","Allure "+mmss(a.fond)+"/km sur les portions plates"]];
+    extra="Prise alimentaire toutes les 40 min dès la 45e. Prudence sur les dix premiers kilomètres : "+
+      "les deux premières heures doivent sembler trop lentes.";
+  }else if(i>=4){
+    /* bloc à allure course inséré au deux tiers */
+    var spec=[0,0,0,0,20,30,20][i]||0;
+    bl=[[Math.round(lmn*0.6),"longue","Première partie à allure fondamentale",
+         "Allure "+mmss(a.fond)+"/km, respiration facile"],
+        [spec,"tempo","Bloc à allure course","Allure "+mmss((a.fond+a.tempo)/2)+
+         "/km, sur terrain représentatif du parcours"],
+        [Math.round(lmn*0.4)-spec,"longue","Retour à allure fondamentale",
+         "Sur jambes déjà fatiguées : c'est là que se joue la fin de course"]];
+  }else{
+    bl=[[lmn,"longue",l[0]+" km avec "+l[1]+" m de D+","Allure "+mmss(a.fond)+"/km, sans bloc rapide"]];
+  }
+  if(i===2)extra="Premier test nutrition : une prise à 1 h, puis toutes les 40 min, et 400 à 500 ml de boisson par heure. "+
+    "Intègre aussi deux volées d'escaliers en descente, sans forcer : la descente se construit tôt, pas la veille.";
+  if(i===4)extra=ath==="edgar"?
+    "Sortie spécifique : bitume et escaliers en descente sur au moins un tiers du parcours. Sur un urban trail, "+
+    "c'est le freinage répété qui détruit les cuisses, pas la montée.":
+    "Première sortie longue avec les semelles orthopédiques. La contrainte articulaire diffère de l'entraînement habituel.";
+  if(i===5)extra="Répétition générale : tenue, chaussures, sac, nutrition et horaire du jour J. Son chrono fixe l'objectif définitif.";
+  if(i===6)extra="Dernier volume conséquent. Le bloc à allure course se place sur jambes fatiguées, comme au 30e kilomètre.";
+  out.push(mk(p.jours[ath==="edgar"?4:3],race?"Saint-Étienne Urban Trail":"Sortie longue",
+    bl,l[1],race?"course":"longue",extra,race?"race":(i===2||i===4||i===5?"key":""),l[0]));
+  return out;
+}
+function mk(day,title,blocks,dp,feel,note,cls,kmFix){
+  var a=me[ath],p=PAR[ath],cote=a.fond+3.2,desc=a.tempo+0.1;
+  var mn=0,km=0;
+  for(var i=0;i<blocks.length;i++){
+    var t=blocks[i][0],f=blocks[i][1];mn+=t;
+    var v=f==="cote"?cote:f==="desc"?desc:f==="longue"||f==="course"?a.fond:
+      f==="terrainFond"?terrainPace(a.fond):f==="terrainRecup"?terrainPace(a.recup):
+      f==="nat"?0:a[f];
+    if(v>0)km+=t/v;
+  }
+  if(kmFix!=null)km=kmFix;
+  return {day:day,title:title,b:blocks,dp:dp,mn:mn,km:km,feel:feel,note:note||"",cls:cls||""};
+}
+
+/* ===== navigation ===== */
+function setAth(x){ath=x;wE.setAttribute("aria-pressed",x==="edgar");
+  wL.setAttribute("aria-pressed",x==="laurie");render()}
+function setTab(t){
+  document.querySelectorAll(".panel").forEach(function(p){p.classList.toggle("on",p.id===t)});
+  [["plan",tPlan],["goal",tGoal],["log",tLog],["renfo",tRenfo],["lex",tLex],["me",tMe]]
+    .forEach(function(x){x[1].setAttribute("aria-selected",x[0]===t)});
+  render();
+}
+function render(){drawBars();drawWeek();drawGoal();drawLex();drawRenfo();drawMe();drawLog();
+  warnStore.innerHTML=storeWarn();warnStore2.innerHTML=storeWarn()}
+
+/* ===== profil de charge ===== */
+function weekTotals(i){
+  var save=wk;wk=i;var s=build();wk=save;
+  var km=0,mn=0,dp=0;
+  for(var j=0;j<s.length;j++){km+=s[j].km;mn+=s[j].mn;dp+=s[j].dp}
+  return [km,mn,dp];
+}
+function drawBars(){
+  var v=[];for(var i=0;i<8;i++)v.push(weekTotals(i)[0]);
+  var mx=Math.max.apply(null,v),h="";
+  for(var i=0;i<8;i++)h+='<button style="height:'+Math.max(8,Math.round(v[i]/mx*100))+'%" class="'+
+    (i===5?"peak":i===7?"race":"")+'" aria-current="'+(i===wk)+'" aria-label="Semaine '+(i+1)+', '+
+    Math.round(v[i])+' km" onclick="wk='+i+';render()"></button>';
+  bars.innerHTML=h;
+}
+
+/* ===== semaine ===== */
+function drawWeek(){
+  var s=build(),t=weekTotals(wk);
+  wkTitle.textContent="Semaine "+(wk+1);
+  wkDates.textContent=DATES[wk];
+  wkKm.textContent=Math.round(t[0])+" km";
+  wkD.textContent=t[2]+" m";
+  wkH.textContent=hm(t[1]);
+  var tag="";
+  if(wk===3)tag='<span class="tag light">Semaine allégée</span>';
+  if(wk===5)tag='<span class="tag peak">Pic de charge</span>';
+  if(wk===7)tag='<span class="tag race">Affûtage et course</span>';
+  wkTag.innerHTML=tag;
+  sessions.innerHTML=s.map(function(x,i){
+    var m=['<span class="num">'+x.km.toFixed(1)+' km</span>','<span class="num">'+hm(x.mn)+'</span>'];
+    if(x.dp)m.push('<span class="num">'+x.dp+' m D+</span>');
+    return '<button class="session '+x.cls+'" onclick="openSheet('+i+')"><div class="day">'+x.day+
+      '</div><div class="title">'+x.title+'</div><div class="meta">'+m.join("")+'</div></button>';
+  }).join("");
+}
+
+/* ===== fiche séance ===== */
+/* Allure NGP à tenir : l'effort exprimé en équivalent plat, tel que
+   l'affiche le champ Normalized Graded Pace de la montre. Elle ne dépend
+   pas du terrain, ce qui la rend lisible en montée comme en descente. */
+function ngpOf(f,a){
+  if(f==="tempo")return a.tempo;
+  if(f==="seuil")return a.seuil;
+  if(f==="cote")return a.seuil;          /* montée courue : effort de seuil */
+  if(f==="recup"||f==="terrainRecup")return a.recup;
+  if(f==="desc")return a.fond;           /* descente de récupération */
+  return a.fond;                          /* fondamental, longue, course */
+}
+var HRZM={fond:[.70,.80,"zone 2"],terrainFond:[.70,.80,"zone 2"],tempo:[.80,.88,"zone 3"],
+  seuil:[.88,.94,"zone 4"],cote:[.84,.94,"zones 3-4"],desc:[.68,.78,"zone 2"],
+  recup:[.60,.70,"zone 1"],terrainRecup:[.60,.70,"zone 1"],
+  longue:[.70,.80,"zone 2"],course:[.72,.85,"zones 2-3"],nat:[.70,.80,"zone 2"]};
+
+function openSheet(i){
+  var x=build()[i],a=me[ath];
+  var z=HRZM[x.feel]||HRZM.fond;
+  var steps=x.b.map(function(b){
+    var n=ngpOf(b[1],a);
+    return '<div class="step"><div class="t num">'+(b[0]>=60?hm(b[0]):Math.round(b[0])+" min")+
+      '</div><div class="b">'+b[2]+
+      (b[1]!=="nat"?' <span class="bn num">NGP '+mmss(n)+'</span>':"")+
+      '<em>'+b[3]+'</em></div></div>';
+  }).join("");
+  sheetIn.innerHTML=
+   '<div class="sheet-top"><div><h3>'+x.title+'</h3><div class="sub">'+x.day+' · semaine '+(wk+1)+
+   '</div></div><button onclick="closeSheet()" aria-label="Fermer">×</button></div>'+
+   '<div class="figs"><div class="fig"><b class="num">'+x.km.toFixed(1)+' km</b><span>distance</span></div>'+
+   '<div class="fig"><b class="num">'+(x.dp?x.dp+" m":"—")+'</b><span>dénivelé +</span></div>'+
+   '<div class="fig"><b class="num">'+hm(x.mn)+'</b><span>durée</span></div></div>'+
+   '<div class="block"><h4>Allure NGP à tenir</h4>'+
+     '<div class="ngp"><b class="num">'+mmss(ngpOf(x.feel,a))+'</b>/km'+
+     '<span>champ <em>Normalized Graded Pace</em> de la Race — la même valeur en montée comme en descente</span></div>'+
+   '</div>'+
+   '<div class="block"><h4>Déroulé</h4>'+steps+'</div>'+
+   (x.feel!=="nat"?'<div class="block"><h4>Fréquence cardiaque</h4><p>'+z[2]+', <span class="num">'+
+     Math.round(a.fc*z[0])+"–"+Math.round(a.fc*z[1])+' bpm</span></p></div>':"")+
+   '<div class="block"><h4>Ressenti attendu</h4><div class="feel">'+FEEL[x.feel]+'</div></div>'+
+   (x.note?'<div class="warn">'+x.note+'</div>':"");
+  sheet.classList.add("on");
+}
+function closeSheet(){sheet.classList.remove("on")}
+
+/* ===== objectif ===== */
+function drawGoal(){
+  var g=GOAL[ath];
+  goal.innerHTML='<h3 class="sec">'+g.race+'</h3><p style="font-size:.8rem;color:var(--soft);margin-bottom:.8rem">'+
+   'Distance équivalente sur plat : <b class="num">'+g.eq+' km</b>. Le dénivelé se convertit à raison de 100 m pour 1 km.</p>'+
+   g.sc.map(function(s,i){return '<div class="scen '+(i===1?"pick":"")+'"><div class="scen-top"><b>'+s[0]+
+     '</b><span class="t num">'+s[1]+'</span></div><p>'+s[2]+'</p></div>'}).join("")+
+   '<div class="warn" style="margin-top:.6rem">'+g.warn+'</div>'+
+   '<h3 class="sec">Points de décision</h3><div class="chk">'+
+   g.chk.map(function(c){return '<div class="chk-item"><b>'+c[0]+'</b><p>'+c[1]+'</p></div>'}).join("")+'</div>'+
+   '<h3 class="sec">Ce que dira la semaine 6</h3><p style="font-size:.8rem;color:var(--soft);margin-bottom:.5rem">'+
+   g.note+'</p>'+g.tbl.map(function(r){return '<div class="zrow"><span class="num">'+r[0]+
+     '</span><b class="num">'+r[1]+'</b></div>'}).join("");
+}
+
+/* ===== lexique ===== */
+function drawLex(){
+  lex.innerHTML='<p style="font-size:.8rem;color:var(--soft);margin-bottom:.6rem">'+
+   'Les termes du plan, avec les valeurs qui te concernent.</p>'+
+   LEX.map(function(l){return '<div class="lex"><b>'+l[0]+'</b><p>'+l[1]+'</p>'+
+     (l[2]?'<div class="me num">'+l[2]+'</div>':"")+'</div>'}).join("");
+}
+
+function drawRenfo(){
+  var r=RENFO[ath];
+  var h='<p style="font-size:.85rem;margin-bottom:1rem">'+r.intro+'</p>';
+  h+=r.seances.map(function(sc){
+    return '<div class="weekhead" style="margin-top:1.2rem"><h2 style="font-size:1rem">'+sc.nom+
+      '</h2><div class="dates num">'+sc.duree+'</div></div>'+
+      '<p style="font-size:.78rem;color:var(--soft);margin-bottom:.2rem">'+sc.quand+'</p>'+
+      '<p style="font-size:.82rem;margin-bottom:.6rem">'+sc.but+'</p>'+
+      sc.ex.map(function(e){
+        return '<div class="lex"><div style="display:flex;justify-content:space-between;gap:.6rem">'+
+          '<b>'+e.n+'</b><span class="num" style="font-size:.8rem;font-weight:700;color:var(--bistre);white-space:nowrap">'+e.s+'</span></div>'+
+          '<p>'+e.t+'</p>'+
+          '<p style="color:var(--alerte);font-size:.78rem;margin-top:2px">À éviter : '+e.e+'</p>'+
+          (e.w?'<div class="me">'+e.w+'</div>':"")+'</div>';
+      }).join("");
+  }).join("");
+  h+='<h3 class="sec">Progression sur huit semaines</h3><div class="chk">'+
+    r.prog.map(function(p){return '<div class="chk-item"><b>'+p[0]+'</b><p>'+p[1]+'</p></div>'}).join("")+'</div>'+
+    '<div class="warn">'+r.regle+'</div>';
+  renfo.innerHTML=h;
+}
+
+/* ===== réglages ===== */
+var PACEF=[["fond","Fondamental"],["tempo","Tempo"],["seuil","Seuil"],["recup","Récupération"]];
+function drawMe(){
+  var a=me[ath];
+  paces.innerHTML=PACEF.map(function(f){
+    var m=Math.floor(a[f[0]]),sc=Math.round((a[f[0]]-m)*60);
+    if(sc===60){m++;sc=0}
+    return '<div class="paceRow"><label>'+f[1]+'</label><div class="paceIn">'+
+      '<input type="number" inputmode="numeric" id="p_'+f[0]+'_m" value="'+m+'" min="3" max="15" aria-label="'+f[1]+', minutes">'+
+      "<span>'</span>"+
+      '<input type="number" inputmode="numeric" id="p_'+f[0]+'_s" value="'+String(sc).padStart(2,"0")+
+      '" min="0" max="59" aria-label="'+f[1]+', secondes"><span>/km</span></div></div>';
+  }).join("");
+  aFc.value=a.fc;
+  rythme.innerHTML=ath==="edgar"?
+   '<h3 class="sec">Rythme de la semaine</h3><div class="pair">'+
+   '<button class="opt'+(appoint?"":" on")+'" onclick="setAppoint(false)"><b>3 séances</b>'+
+   '<span>lundi, mercredi, jeudi</span></button><button class="opt'+(appoint?" on":"")+
+   '" onclick="setAppoint(true)"><b>4 séances</b><span>+ appoint le vendredi</span></button></div>'+
+   '<p style="font-size:.75rem;color:var(--soft)">La sortie longue du dimanche s\'ajoute dans les deux cas. '+
+   "L'appoint disparaît de lui-même en semaines 4 à 6, quand les autres séances sont les plus longues.</p>":"";
+  var Z=[["Zone 1 · récupération",.60,.70],["Zone 2 · fondamental",.70,.80],
+         ["Zone 3 · tempo",.80,.88],["Zone 4 · seuil",.88,.94],["Zone 5 · maximale",.94,1]];
+  zones.innerHTML='<h3 class="sec">Zones de fréquence cardiaque</h3>'+Z.map(function(z){
+    return '<div class="zrow"><span>'+z[0]+'</span><b class="num">'+Math.round(a.fc*z[1])+"–"+
+      Math.round(a.fc*z[2])+'</b></div>'}).join("");
+}
+function saveMe(){
+  var a=me[ath],bad=[];
+  PACEF.forEach(function(f){
+    var mE=document.getElementById("p_"+f[0]+"_m"),sE=document.getElementById("p_"+f[0]+"_s");
+    var m=parseInt(mE.value),sc=parseInt(sE.value);
+    if(isNaN(m))return;
+    if(isNaN(sc))sc=0;
+    if(sc>59){bad.push(f[1]);return}
+    var v=m+sc/60;
+    if(v<3||v>15){bad.push(f[1]);return}
+    a[f[0]]=v;
+  });
+  var fc=parseInt(aFc.value);
+  if(fc>=120&&fc<=230)a.fc=fc;else if(aFc.value)bad.push("fréquence maximale");
+  if(bad.length){toast("Valeur incohérente : "+bad.join(", "));render();return}
+  var ok=put("ct_allures",JSON.stringify(me));
+  toast(ok?"Allures enregistrées":"Allures appliquées, mais non conservées après fermeture");
+  render();
+}
+function setAppoint(v){appoint=v;put("ct_appoint",v?"1":"0");render()}
+function doBackup(){backup.value=JSON.stringify({me:me,appoint:appoint});
+  backup.select();toast("Copie ce texte et garde-le")}
+function doRestore(){
+  try{var o=JSON.parse(backup.value);
+    if(o.me)me=o.me;if(typeof o.appoint==="boolean")appoint=o.appoint;
+    put("ct_allures",JSON.stringify(me));put("ct_appoint",appoint?"1":"0");
+    toast("Réglages restaurés");render()}
+  catch(e){toast("Ce texte n'est pas exploitable")}
+}
+
+/* ===== carnet ===== */
+function saveLog(){
+  if(!lDate.value||!lType.value){toast("Il manque la date ou le type de séance");return}
+  logs.push({dt:lDate.value,ty:lType.value,km:lKm.value,mn:lMin.value,
+    dp:lD.value,fc:lFc.value,no:lNote.value,a:ath});
+  var ok=put("ct_carnet",JSON.stringify(logs));
+  [lDate,lKm,lMin,lD,lFc,lNote].forEach(function(f){f.value=""});lType.value="";
+  toast(ok?"Séance enregistrée":"Séance ajoutée, mais non conservée après fermeture");drawLog();
+}
+function drawLog(){
+  var l=logs.filter(function(x){return x.a===ath}).slice().reverse();
+  logList.innerHTML=l.length?l.map(function(x){
+    var m=[];if(x.km)m.push(x.km+" km");if(x.mn)m.push(x.mn+" min");
+    if(x.dp)m.push(x.dp+" m D+");if(x.fc)m.push(x.fc+" bpm");
+    return '<div class="log"><b>'+x.ty+'</b> · <span class="num">'+x.dt+'</span>'+
+      '<div class="meta num">'+m.join(" · ")+'</div>'+(x.no?'<div class="meta">'+x.no+'</div>':"")+'</div>';
+  }).join(""):'<div class="empty">Aucune séance enregistrée.</div>';
+}
+
+/* ===== import Suunto ===== */
+pick.addEventListener("change",function(e){if(e.target.files.length)readFile(e.target.files[0])});
+["dragenter","dragover"].forEach(function(ev){drop.addEventListener(ev,function(e){
+  e.preventDefault();drop.classList.add("over")})});
+["dragleave","drop"].forEach(function(ev){drop.addEventListener(ev,function(e){
+  e.preventDefault();drop.classList.remove("over")})});
+drop.addEventListener("drop",function(e){if(e.dataTransfer.files.length)readFile(e.dataTransfer.files[0])});
+
+function readFile(f){
+  var r=new FileReader();
+  r.onerror=function(){fail("Le fichier n'a pas pu être lu.")};
+  r.onload=function(e){var j;
+    try{j=JSON.parse(e.target.result)}catch(err){return fail("Ce fichier n'est pas du JSON valide.")}
+    try{parseSuunto(j)}catch(err){fail("Structure inattendue : "+err.message)}};
+  r.readAsText(f);
+}
+function fail(m){suuntoOut.innerHTML='<div class="warn">'+m+
+  " Exporte la séance depuis l'application Suunto au format JSON, puis réessaie.</div>"}
+function findLog(j){if(j&&j.DeviceLog)return j.DeviceLog;
+  if(j&&j.data&&j.data.DeviceLog)return j.data.DeviceLog;return null}
+function hrv(x){return x?Math.round(x*(x<10?60:1)):null}
+
+function parseSuunto(j){
+  var dl=findLog(j);if(!dl||!dl.Header)throw new Error("en-tête introuvable");
+  var h=dl.Header,km=(h.Distance||0)/1000,sec=h.Duration||0;
+  var asc=Math.round(h.Ascent||0),desc=Math.round(h.Descent||0);
+  var hrA=null,hrM=null;
+  if(h.HR&&h.HR.Avg!=null){hrA=hrv(h.HR.Avg);hrM=hrv(h.HR.Max)}
+  else if(Array.isArray(dl.Samples)&&dl.Samples.length){
+    var sum=0,n=0,mx=0;
+    for(var i=0;i<dl.Samples.length;i++){
+      var v=dl.Samples[i].HR;
+      if(v!=null){sum+=v;n++;if(v>mx)mx=v}
+    }
+    if(n){hrA=Math.round(sum/n*60);hrM=Math.round(mx*60)}
+  }
+  var cad=(h.StepCount&&sec)?Math.round(h.StepCount/(sec/60)):null;
+  var p=km>0?(sec/60)/km:0,dt=h.DateTime?new Date(h.DateTime):null;
+  last={km:km,sec:sec,asc:asc,hrA:hrA,date:dt?dt.toISOString().slice(0,10):""};
+  var laps=collectLaps(dl);
+  suuntoOut.innerHTML=
+   '<div class="weekhead"><h2>Séance importée</h2><div class="dates num">'+
+   (dt?dt.toLocaleDateString("fr-FR"):"date inconnue")+'</div></div>'+
+   '<div class="figs">'+fg(km.toFixed(1)+" km","distance")+fg(asc+" m","dénivelé +")+fg(hm(sec/60),"durée")+
+   fg(mmss(p),"allure moyenne")+fg(desc+" m","dénivelé −")+fg(hrA?hrA+" bpm":"—","FC moyenne")+'</div>'+
+   compare(km,asc,sec)+splitsHtml(laps,p)+zoneHtml(hrA,hrM)+cadHtml(cad)+
+   '<button class="act" onclick="toLog()" style="margin-top:1rem">Ajouter au carnet</button>';
+}
+function fg(v,l){return '<div class="fig"><b class="num">'+v+'</b><span>'+l+'</span></div>'}
+function collectLaps(dl){
+  var out=[],w=dl.Windows||[];
+  for(var i=0;i<w.length;i++){
+    var ww=w[i]&&w[i].Window;if(!ww)continue;
+    if((ww.Type||"").toLowerCase().indexOf("lap")<0)continue;
+    var d=(ww.Distance||0)/1000,t=ww.Duration||0;if(d<=0||t<=0)continue;
+    var hr=null;
+    if(Array.isArray(ww.HR)&&ww.HR[0]&&ww.HR[0].Avg!=null)hr=hrv(ww.HR[0].Avg);
+    out.push({d:d,t:t,asc:Math.round(ww.Ascent||0),hr:hr,pace:(t/60)/d});
+  }
+  return out;
+}
+function splitsHtml(l,avg){
+  if(!l.length)return '<div class="block"><h4>Tours par kilomètre</h4><p style="font-size:.85rem;color:var(--soft)">'+
+   "Ce fichier ne contient pas de tours automatiques. Active le tour au kilomètre sur la montre pour les obtenir.</p></div>";
+  var worst=Math.max.apply(null,l.map(function(x){return x.pace}));
+  return '<h3 class="sec">Tours par kilomètre</h3>'+l.map(function(x,i){
+    var w=Math.max(6,Math.round(100-(x.pace/worst)*70)),slow=x.pace>avg*1.1?" slow":"";
+    return '<div class="split"><span class="kmno num">'+(i+1)+'</span><span class="bar"><i class="'+slow+
+      '" style="width:'+w+'%"></i></span><span class="val num">'+mmss(x.pace)+
+      (x.asc?'<em>'+x.asc+' m</em>':"")+(x.hr?'<em>'+x.hr+'</em>':"")+'</span></div>';
+  }).join("")+'<p style="font-size:.75rem;color:var(--soft);margin-top:.5rem">'+
+   "Les tours en ocre dépassent de plus de 10 % l'allure moyenne, ce qui correspond en général aux portions montantes.</p>";
+}
+function compare(km,asc,sec){
+  var s=build(),best=null,gap=1e9;
+  for(var i=0;i<s.length;i++){
+    var g=Math.abs(s[i].km-km)+Math.abs(s[i].dp-asc)/100;
+    if(g<gap){gap=g;best=s[i]}
+  }
+  if(!best||gap>12)return "";
+  return '<h3 class="sec">Comparaison au plan</h3><p style="font-size:.8rem;color:var(--soft);margin-bottom:.5rem">'+
+   'Séance la plus proche : '+best.day.toLowerCase()+' de la semaine '+(wk+1)+', '+best.title+'.</p>'+
+   row("Distance",best.km.toFixed(1)+" km",km.toFixed(1)+" km",km-best.km,1.5)+
+   row("Dénivelé positif",best.dp+" m",asc+" m",asc-best.dp,80)+
+   row("Durée",hm(best.mn),hm(sec/60),sec/60-best.mn,10);
+}
+function row(lab,prev,fait,ec,tol){
+  var cls=Math.abs(ec)<=tol?"ok":"off";
+  var txt=(ec>0?"+":"")+(Math.abs(ec)<10?ec.toFixed(1):Math.round(ec));
+  return '<div class="cmp"><span>'+lab+'</span><span class="num">'+prev+' → '+fait+
+    '</span><span class="'+cls+' num">'+txt+'</span></div>';
+}
+function zoneHtml(hrA,hrM){
+  if(!hrA)return "";
+  var a=me[ath],r=hrA/a.fc,z="zone 1";
+  if(r>=.94)z="zone 5";else if(r>=.88)z="zone 4";else if(r>=.80)z="zone 3";else if(r>=.70)z="zone 2";
+  var m="Fréquence moyenne en "+z+", soit "+Math.round(r*100)+" % de ta fréquence maximale.";
+  if(z==="zone 4"||z==="zone 5")m+=" Pour une endurance ou une sortie longue, c'est trop haut : "+
+    "l'intérêt de ces séances tient à leur allure basse.";
+  return '<div class="block" style="margin-top:1rem"><h4>Lecture cardiaque</h4><p style="font-size:.85rem">'+m+
+    (hrM?' Maximale relevée : <span class="num">'+hrM+' bpm</span>.':"")+'</p></div>';
+}
+function cadHtml(cad){
+  if(!cad)return "";
+  var m='Cadence moyenne mesurée : <span class="num">'+cad+' pas par minute</span>.';
+  if(ath==="edgar"){
+    if(cad<160)m+=" C'est nettement sous la cible de 170 à 180. Une foulée longue et bondissante, héritée du sprint, "+
+      "allonge le temps de contact au sol et charge l'Achille à chaque appui. À travailler en priorité sur les prochaines endurances.";
+    else if(cad<170)m+=" Proche de la cible de 170 à 180, encore un peu bas.";
+    else m+=" Dans la cible visée de 170 à 180.";
+  }
+  return '<div class="block"><h4>Cadence</h4><p style="font-size:.85rem">'+m+'</p></div>';
+}
+function toLog(){
+  if(!last)return;
+  logs.push({dt:last.date,ty:"Importée",km:last.km.toFixed(1),mn:Math.round(last.sec/60),
+    dp:last.asc,fc:last.hrA||"",no:"",a:ath});
+  put("ct_carnet",JSON.stringify(logs));toast("Séance ajoutée au carnet");drawLog();
+}
+function toast(t){var d=document.createElement("div");d.className="toast";d.textContent=t;
+  document.body.appendChild(d);setTimeout(function(){d.remove()},2600)}
+
+render();
+</script>
+</body>
+</html>

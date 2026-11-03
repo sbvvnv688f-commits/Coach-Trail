@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Cadre iPhone</title>
+<!-- Outil de capture : affiche l'URL donnée (?url=…) dans un cadre de la taille d'un iPhone.
+     Chrome sans interface impose une largeur de fenêtre minimale supérieure à celle d'un téléphone. -->
+<style>html,body{margin:0;background:#888}iframe{display:block;border:0;background:#fff}</style>
+</head>
+<body>
+<script>
+const p = new URLSearchParams(location.search);
+const f = document.createElement("iframe");
+f.width = p.get("l") || 390;
+f.height = p.get("h") || 844;
+f.src = p.get("url");
+document.body.append(f);
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# Fins de ligne LF dans le dépôt, quel que soit le poste
+* text=auto eol=lf
+
+# Fichiers binaires
+*.fit binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.pdf binary

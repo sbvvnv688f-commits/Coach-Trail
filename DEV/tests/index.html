@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Casse-Pattes — tests</title>
+<style>body{font:14px/1.5 ui-monospace,Consolas,monospace;margin:16px;background:#F4F3EE;color:#16281F}</style>
+</head>
+<body>
+<h1>Tests Casse-Pattes</h1>
+<pre id="rapport">Exécution…</pre>
+<script type="module">
+import { executer } from "./harness.js";
+import "./core.test.js";
+import "./fiche.test.js";
+import "./planner.test.js";
+import "./fiches-locales.test.js";
+import "./app.test.js";
+executer();
+</script>
+</body>
+</html>

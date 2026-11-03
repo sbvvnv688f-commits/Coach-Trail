@@ -1,0 +1,17 @@
+# Données personnelles : ne jamais publier (dépôt public)
+DEV/samples/
+DEV/specs/historique/
+DEV/archive/
+# Fiches athlètes, plans et objectifs personnels (importés à la main dans l'application)
+DEV/private/
+
+# Système
+__pycache__/
+.DS_Store
+Thumbs.db
+desktop.ini
+~$*
+
+# Éditeur
+.vscode/*
+!.vscode/extensions.json

@@ -1,0 +1,40 @@
+{
+  "format": "casse-pattes/fiche",
+  "version": 1,
+  "creee": "2026-10-06",
+  "athlete": { "id": "alex", "prenom": "Alex" },
+  "physiologie": {
+    "fcMax": 190,
+    "fcMaxSource": "mesuree",
+    "allures": {
+      "fond":  { "valeur": 360, "source": "Valeur fictive" },
+      "tempo": { "valeur": 320, "source": "Valeur fictive" },
+      "seuil": { "valeur": 295, "source": "Valeur fictive" },
+      "recup": { "valeur": 400, "source": "Valeur fictive" }
+    },
+    "vitesseAscensionnelle": 800,
+    "cadence": { "cible": [160, 170] }
+  },
+  "terrain": { "dplusParKm": 30, "penaliteParCentM": 120 },
+  "reference": { "nom": "Course fictive", "date": "2026-10-04", "distance": 42000, "dplus": 1200, "temps": 16200 },
+  "etat": { "volumeHebdo": 40000, "dplusHebdo": 1200 },
+  "sante": { "vigilances": [], "consignes": [] },
+  "disponibilites": {
+    "jours": [
+      { "jour": 2, "role": "qualite", "dureeMax": 4500 },
+      { "jour": 4, "role": "endurance", "dureeMax": 4500 },
+      { "jour": 6, "role": "cotes", "dureeMax": 4500 },
+      { "jour": 7, "role": "longue", "dureeMax": 18000 }
+    ],
+    "indisponibilites": [{ "du": "2026-12-24", "au": "2026-12-26", "motif": "fêtes" }]
+  },
+  "activites": { "skiRando": { "pratique": true, "usage": "alternative" } },
+  "objectifs": [
+    { "id": "obj", "priorite": "A", "nom": "Trail fictif", "date": "2027-03-28", "distance": 50000, "dplus": 2500, "terrain": "montagne", "technicite": "mixte", "batons": true }
+  ],
+  "seancesImposees": [
+    { "date": "2027-02-14", "type": "course", "nom": "Course de préparation fictive", "distance": 25000, "dplus": 900 }
+  ],
+  "regles": { "seancesDuresParSemaine": 1, "plafondsFc": { "seuil": 178, "tempo": 168, "endurance": 152 } },
+  "renfo": { "seancesParSemaine": 2, "jours": [4, 6], "exercices": ["gainage", "nordic-hamstring"] }
+}

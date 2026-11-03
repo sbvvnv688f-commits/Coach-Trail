@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Casse-Pattes — aperçu texte d'un plan</title>
+<style>body{font:13px/1.45 ui-monospace,Consolas,monospace;margin:16px;background:#F4F3EE;color:#16281F}</style>
+</head>
+<body>
+<!-- Outil local : python DEV/tools/serve.py, puis /DEV/tests/apercu-plan.html?fiche=<nom du fichier>
+     (fiches lues dans /fiches/, servi uniquement en local). Sans paramètre : fiche fictive. -->
+<pre id="rapport">Calcul…</pre>
+<script type="module">
+import { validerFiche } from "../../docs/js/data/fiche.js";
+import { genererPlan } from "../../docs/js/core/planner.js";
+import { fmtKm, fmtDuree, fmtDateCourte } from "../../docs/js/core/units.js";
+
+const nom = new URLSearchParams(location.search).get("fiche");
+const url = nom ? `/fiches/${encodeURIComponent(nom)}` : "./fixtures/fiche-fictive.json";
+const v = validerFiche(await (await fetch(url)).json());
+const out = [];
+if (!v.ok) out.push(...v.erreurs.map((e) => `${e.chemin} : ${e.message}`));
+else {
+  const plan = genererPlan(v.fiche);
+  out.push(`Objectif : ${plan.objectif.nom}, ${plan.objectif.date}`);
+  out.push(...plan.scenarios.map((s) => `  ${s.nom} : ${fmtDuree(s.temps)}`));
+  for (const sem of plan.semaines) {
+    out.push("", `S${sem.numero} ${fmtDateCourte(sem.lundi)} · ${sem.phase}${sem.allegee ? " (allégée)" : ""}${sem.perturbee ? " (perturbée)" : ""} · ${fmtKm(sem.totaux.distance)} km · ${Math.round(sem.totaux.dplus)} m · ${fmtDuree(sem.totaux.duree)}`);
+    for (const s of sem.seances) {
+      out.push(`   ${s.date} ${s.type.padEnd(8)} n${s.niveau} ${fmtKm(s.distance).padStart(5)} km ${String(s.dplus).padStart(5)} m ${fmtDuree(s.duree).padStart(6)}  ${s.titre}${s.renfo ? " + renfo" : ""}${s.cle ? " ★" : ""}`);
+    }
+  }
+  out.push("", "Points de contrôle :", ...plan.pointsControle.map((p) => `  ${p.date} ${p.titre} : ${p.texte}`));
+}
+document.getElementById("rapport").textContent = out.join("\n");
+</script>
+</body>
+</html>

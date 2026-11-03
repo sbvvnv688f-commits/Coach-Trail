@@ -1,0 +1,9 @@
+<!-- Logo Casse-Pattes, variante 09A « Papier, profil » (validée le 3 novembre 2026).
+     Source de travail : le texte dépend de la police Barlow Condensed 800 (Google Fonts, licence OFL).
+     Pour les icônes de l'application, le texte sera converti en tracés (phase 1). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="512" height="512">
+  <rect width="100" height="100" rx="22.5" fill="#F4F3EE"/>
+  <text x="50" y="44" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="800" font-size="31" fill="#16281F" textLength="72" lengthAdjust="spacingAndGlyphs">CASSE</text>
+  <path d="M12 55 L32 55 L38 49 L45 61 L52 47 L58 55 L88 55" fill="none" stroke="#9C6B3F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <text x="50" y="84" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="800" font-size="31" fill="#2E6B4F" textLength="78" lengthAdjust="spacingAndGlyphs">PATTES</text>
+</svg>
