@@ -3,7 +3,7 @@
 
 import { h, vider, icone, ICONES } from "./ui/dom.js";
 import { validerFiche } from "./data/fiche.js";
-import { genererPlan, appliquerDeplacements } from "./core/planner.js";
+import { genererPlan, appliquerDeplacements, marquerRealisees } from "./core/planner.js";
 import { appliquerAjustements } from "./core/ajustements.js";
 import { aujourdhui } from "./core/units.js";
 import * as db from "./store/db.js";
@@ -29,6 +29,7 @@ const etat = {
   ajustements: null,
   plan: null,
   deplacements: {},
+  realisees: {},              // { idSeance: date de validation }
   onglet: "calendrier",
   mois: null,
   aujourdhui: aujourdhui(),
@@ -60,6 +61,7 @@ export const app = {
   ouvrirVolet,
   fermerVolet,
   deplacerSeance,
+  basculerRealisee,
   enregistrerAjustements,
   choisirAthlete,
   supprimerFiche,
@@ -70,6 +72,7 @@ export const app = {
 // ---------- données ----------
 
 const cleAjustements = (id) => `ajustements:${id}`;
+const cleRealisees = (id) => `realisees:${id}`;
 
 function recalculerPlan() {
   const origine = app.ficheOrigine();
@@ -79,7 +82,7 @@ function recalculerPlan() {
   if (!fiche) return;
   const plan = genererPlan(fiche);
   if (plan.erreur) { etat.plan = plan; return; }
-  etat.plan = appliquerDeplacements(plan, etat.deplacements);
+  etat.plan = marquerRealisees(appliquerDeplacements(plan, etat.deplacements), etat.realisees, etat.aujourdhui);
 }
 
 async function chargerFiches() {
@@ -98,7 +101,9 @@ async function chargerFiches() {
 async function chargerDeplacements() {
   etat.deplacements = {};
   etat.ajustements = null;
+  etat.realisees = {};
   if (etat.actif) {
+    try { etat.realisees = (await db.lire("divers", cleRealisees(etat.actif))) || {}; } catch { /* idem */ }
     try { etat.deplacements = (await db.lire("deplacements", etat.actif)) || {}; } catch { /* idem */ }
     try { etat.ajustements = (await db.lire("divers", cleAjustements(etat.actif))) || null; } catch { /* idem */ }
   }
@@ -128,6 +133,7 @@ async function importerTexte(texte) {
       }
       for (const [id, d] of Object.entries(json.deplacements || {})) await db.ecrire("deplacements", id, d);
       for (const [id, a] of Object.entries(json.ajustements || {})) await db.ecrire("divers", cleAjustements(id), a);
+      for (const [id, r] of Object.entries(json.realisees || {})) await db.ecrire("divers", cleRealisees(id), r);
       if (premier) await choisirAthlete(premier, false);
       message(erreurs.length ? "Sauvegarde restaurée en partie" : "Sauvegarde restaurée");
       return { ok: !erreurs.length, erreurs };
@@ -182,6 +188,7 @@ async function supprimerFiche(id) {
   await db.supprimer("fiches", id);
   await db.supprimer("deplacements", id);
   await db.supprimer("divers", cleAjustements(id));
+  await db.supprimer("divers", cleRealisees(id));
   etat.fiches.delete(id);
   etat.actif = etat.fiches.keys().next().value ?? null;
   await chargerDeplacements();
@@ -202,6 +209,20 @@ async function enregistrerAjustements(aj) {
   message(conserve
     ? (aj ? "Plan et temps visés recalculés" : "Valeurs de la fiche rétablies")
     : "Plan recalculé, mais modification non conservée après fermeture");
+  rendre();
+}
+
+// Valide une séance comme faite, ou annule la validation.
+async function basculerRealisee(seance) {
+  const faite = !etat.realisees[seance.id];
+  if (faite) etat.realisees[seance.id] = etat.aujourdhui;
+  else delete etat.realisees[seance.id];
+  let conserve = true;
+  try { await db.ecrire("divers", cleRealisees(etat.actif), etat.realisees); } catch { conserve = false; }
+  recalculerPlan();
+  message(!conserve ? "Validation non conservée après fermeture" : faite ? "Séance validée" : "Validation annulée");
+  if (faite) fermerVolet();
+  else ouvrirSeance(seance.id);
   rendre();
 }
 

@@ -29,6 +29,7 @@ Une décision validée ne se rediscute que sur un fait nouveau, noté ici.
 | D-21 | 2026-11-03 | Athlète à distance : **formulaire PDF remplissable** hors ligne (`DEV/formulaire/`), relu par `DEV/tools/lire-formulaire.py` en brouillon de fiche ; réponses hors dépôt | Choix de l'utilisateur ; contrôles iOS fiables (texte, cases) || D-22 | 2026-11-03 | Allures de référence, FC max et zones **modifiables dans l'application** (Profil). Elles se superposent à la fiche sans la modifier ; plan et temps visés recalculés (temps visés × rapport moyen des allures fond, tempo, seuil). Une nouvelle fiche importée les remplace | Demande de l'utilisateur |
 | D-23 | 2026-11-03 | Déplacement d'une séance aussi par **appui long puis glissé** sur le calendrier, vers un jour libre de la même semaine | Demande de l'utilisateur |
 | D-24 | 2026-11-03 | Lien vers l'ancienne application retiré des réglages (`docs/v4/` reste servi) ; **lexique** consultable depuis les réglages | Demande de l'utilisateur |
+| D-25 | 2026-11-03 | Une séance passée ou du jour peut être **validée comme faite** (fiche séance) ; ✓ sur la case et bilan par semaine ; une séance faite ne se déplace plus. Simple coche, en attendant le carnet et l'import FIT (phase 2) | Demande de l'utilisateur |
 
 ## Ouvertes
 

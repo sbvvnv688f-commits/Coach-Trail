@@ -120,6 +120,8 @@ button.case:active { transform: scale(.97); }
 .case-km { font-weight: 600; }
 .case-dp { color: var(--doux); }
 .case-cle { position: absolute; top: 2px; right: 4px; font-size: .7rem; color: var(--bistre); }
+.case-faite { position: absolute; bottom: 3px; left: 4px; width: 15px; height: 15px; border-radius: 50%; background: var(--sapin); color: #fff; font-size: .62rem; font-weight: 800; display: grid; place-items: center; }
+.case.faite.passe:not(.hors-mois) { opacity: 1; }
 .case-renfo { position: absolute; bottom: 5px; right: 5px; width: 6px; height: 6px; border-radius: 50%; background: var(--bistre); }
 .case.repos { background: repeating-linear-gradient(-45deg, transparent 0 5px, var(--trait) 5px 6px); opacity: .55; }
 .case.hors-mois { opacity: .38; }
@@ -137,6 +139,8 @@ button.case:active { transform: scale(.97); }
 button.case.course { background: var(--encre); color: var(--papier); border-color: var(--encre); border-top-color: var(--alerte); }
 button.case.course .case-type, button.case.course .case-num, button.case.course .case-dp { color: var(--papier); }
 .resume { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 4px 2px 8px; font-size: .72rem; color: var(--doux); border-bottom: 1px solid var(--trait); }
+.bilan { color: var(--doux); margin-right: 6px; }
+.bilan.complet { color: var(--sapin); }
 .resume.courante .resume-phase { color: var(--sapin); font-weight: 700; }
 .semaine.allegee + .resume .resume-phase { color: var(--bistre); }
 .legende { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 14px; font-size: .75rem; color: var(--doux); }
@@ -177,6 +181,9 @@ button.case.course .case-type, button.case.course .case-num, button.case.course 
 .exercice p { margin: 4px 0 8px; font-size: .86rem; }
 .exercice .eviter { color: var(--alerte); }
 .jours-libres { display: flex; flex-wrap: wrap; gap: 8px; }
+.bouton.valider { margin-top: 14px; }
+.validee { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 14px; padding: 8px 12px; border-radius: var(--rayon); background: var(--sapin-pale); color: var(--sapin); }
+.validee em { display: block; font-style: normal; font-size: .8rem; color: var(--doux); }
 
 /* ---------- allures et zones ---------- */
 .ligne-saisie { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--trait); font-size: .92rem; }

@@ -16,12 +16,15 @@ export function vueReglages(app) {
     const fiches = [...app.etat.fiches.values()].map((x) => x.brut);
     const deplacements = {};
     const ajustements = {};
+    const realisees = {};
     for (const id of app.etat.fiches.keys()) {
       deplacements[id] = (await db.lire("deplacements", id)) || {};
       const a = await db.lire("divers", `ajustements:${id}`);
       if (a) ajustements[id] = a;
+      const r = await db.lire("divers", `realisees:${id}`);
+      if (r) realisees[id] = r;
     }
-    const r = await partagerFichier(construireSauvegarde(fiches, deplacements, ajustements), nomSauvegarde());
+    const r = await partagerFichier(construireSauvegarde(fiches, deplacements, ajustements, realisees), nomSauvegarde());
     if (r !== "annule") {
       ecrirePref("derniereSauvegarde", new Date().toISOString().slice(0, 10));
       app.message("Sauvegarde créée");
@@ -56,7 +59,7 @@ export function vueReglages(app) {
     h("section", { class: "bloc" },
       h("h2", {}, "Sauvegarde"),
       h("p", {}, derniere ? `Dernière sauvegarde : ${fmtDateLongue(derniere)}.` : "Aucune sauvegarde depuis cet appareil."),
-      h("p", { class: "discret" }, "Le fichier contient tes fiches, tes séances déplacées et tes allures ou zones modifiées. Enregistre-le dans Fichiers ; pour restaurer, importe-le comme une fiche."),
+      h("p", { class: "discret" }, "Le fichier contient tes fiches, tes séances déplacées ou validées et tes allures ou zones modifiées. Enregistre-le dans Fichiers ; pour restaurer, importe-le comme une fiche."),
       h("button", { type: "button", class: "bouton", disabled: !app.etat.fiches.size, onclick: sauvegarder }, "Créer une sauvegarde"),
       h("button", { type: "button", class: "bouton secondaire", onclick: app.choisirFichier }, "Restaurer une sauvegarde")),
 

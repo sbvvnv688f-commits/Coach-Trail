@@ -69,7 +69,7 @@ function grille(app, lignes, parDate) {
     cibles: (c) => {
       const s = seanceDe(c);
       const sem = s && s.role !== "course" ? app.etat.plan.semaines.find((x) => x.numero === s.semaine) : null;
-      return new Set(sem ? joursLibres(sem, s) : []);
+      return new Set(sem && !s.faite ? joursLibres(sem, s) : []);
     },
     deposer: (c, date) => { const s = seanceDe(c); if (s) app.deplacerSeance(s, date); },
   });
@@ -103,21 +103,25 @@ function caseJour(app, d, s, mois, aujourdhui, plan) {
   classes.push(`n${s.niveau}`);
   if (s.role === "course") classes.push("course");
   if (s.deplacee) classes.push("deplacee");
-  const etiquette = `${fmtDateLongue(d)} : ${s.titre}, ${fmtKm(s.distance)} km, ${s.dplus} m de D+, ${fmtDuree(s.duree)}, intensité ${LIBELLES_NIVEAU[s.niveau].toLowerCase()}${s.renfo ? ", avec renforcement" : ""}${s.cle ? ", séance clé" : ""}`;
+  if (s.faite) classes.push("faite");
+  const etiquette = `${fmtDateLongue(d)} : ${s.titre}, ${fmtKm(s.distance)} km, ${s.dplus} m de D+, ${fmtDuree(s.duree)}, intensité ${LIBELLES_NIVEAU[s.niveau].toLowerCase()}${s.renfo ? ", avec renforcement" : ""}${s.cle ? ", séance clé" : ""}${s.faite ? ", faite" : ""}`;
   return h("button", { type: "button", class: classes.join(" "), dataset: { date: d, seance: s.id }, "aria-label": etiquette, onclick: () => app.ouvrirSeance(s.id) },
     num,
     s.cle ? h("span", { class: "case-cle", "aria-hidden": "true" }, "★") : null,
     h("span", { class: "case-type" }, COURT[s.type] ?? s.type),
     h("span", { class: "case-km" }, fmtKm(s.distance, s.distance >= 9950 ? 0 : 1)),
     s.dplus >= 50 ? h("span", { class: "case-dp" }, `+${s.dplus}`) : null,
-    s.renfo ? h("span", { class: "case-renfo", "aria-hidden": "true" }) : null);
+    s.renfo ? h("span", { class: "case-renfo", "aria-hidden": "true" }) : null,
+    s.faite ? h("span", { class: "case-faite", "aria-hidden": "true" }, "✓") : null);
 }
 
 function resumeSemaine(sem, courante) {
   const t = sem.totaux;
   return h("div", { class: `resume${courante ? " courante" : ""}` },
     h("span", { class: "resume-phase" }, `S${sem.numero} · ${PHASES[sem.phase].nom}${sem.allegee ? " · allégée" : ""}`),
-    h("span", { class: "resume-totaux" }, `${fmtKm(t.distance, 0)} km · ${fmtMetres(t.dplus)} m · ${fmtDuree(t.duree)}`));
+    h("span", { class: "resume-totaux" },
+      sem.bilan.echues ? h("b", { class: sem.bilan.faites === sem.bilan.echues ? "bilan complet" : "bilan" }, `✓ ${sem.bilan.faites}/${sem.bilan.total}`) : null,
+      `${fmtKm(t.distance, 0)} km · ${fmtMetres(t.dplus)} m · ${fmtDuree(t.duree)}`));
 }
 
 function legende() {

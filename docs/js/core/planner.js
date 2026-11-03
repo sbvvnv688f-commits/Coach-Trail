@@ -460,6 +460,20 @@ export function appliquerDeplacements(plan, deplacements = {}) {
   return plan;
 }
 
+// Marque les séances validées par l'athlète ({ idSeance: date de validation }) et compte, par semaine,
+// les séances faites parmi celles déjà passées ou du jour.
+export function marquerRealisees(plan, realisees = {}, aujourdhui = null) {
+  for (const sem of plan.semaines) {
+    for (const s of sem.seances) {
+      s.faite = !!realisees[s.id];
+      s.valideeLe = realisees[s.id] || null;
+    }
+    const echues = sem.seances.filter((s) => s.faite || (aujourdhui && s.date <= aujourdhui));
+    sem.bilan = { faites: sem.seances.filter((s) => s.faite).length, echues: echues.length, total: sem.seances.length };
+  }
+  return plan;
+}
+
 export function joursLibres(semaine, seance) {
   const pris = new Set(semaine.seances.filter((s) => s !== seance).map((s) => s.date));
   const out = [];

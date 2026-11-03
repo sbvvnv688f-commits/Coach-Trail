@@ -1,4 +1,4 @@
-// Sauvegarde complète par fichier : fiches importées, déplacements de séances, allures et zones modifiées.
+// Sauvegarde complète par fichier : fiches importées, séances déplacées et validées, allures et zones modifiées.
 // Sur iPhone, le fichier passe par la feuille de partage (Enregistrer dans Fichiers, AirDrop…).
 
 import { VERSION_APP } from "../version.js";
@@ -6,7 +6,7 @@ import { aujourdhui } from "../core/units.js";
 
 export const FORMAT_SAUVEGARDE = "casse-pattes/sauvegarde";
 
-export function construireSauvegarde(fiches, deplacements, ajustements = {}) {
+export function construireSauvegarde(fiches, deplacements, ajustements = {}, realisees = {}) {
   return {
     format: FORMAT_SAUVEGARDE,
     version: 1,
@@ -15,6 +15,7 @@ export function construireSauvegarde(fiches, deplacements, ajustements = {}) {
     fiches,
     deplacements,
     ajustements,
+    realisees,
   };
 }
 

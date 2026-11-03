@@ -1,7 +1,7 @@
 import { test, vrai, egal } from "./harness.js";
 import { chargerFictive } from "./fiche.test.js";
 import { validerFiche } from "../../docs/js/data/fiche.js";
-import { genererPlan, appliquerDeplacements, joursLibres } from "../../docs/js/core/planner.js";
+import { genererPlan, appliquerDeplacements, joursLibres, marquerRealisees } from "../../docs/js/core/planner.js";
 import { jourSemaine, ajouterJours } from "../../docs/js/core/units.js";
 
 const CONSTRUCTION = ["base", "developpement", "specifique"];
@@ -93,4 +93,18 @@ test("déplacement : dans la semaine accepté, hors semaine ignoré", async () =
   vrai(s.deplacee, "séance non marquée déplacée");
   appliquerDeplacements(plan, { [s.id]: ajouterJours(sem.lundi, 10) });
   egal(s.date, s.datePrevue);
+});
+
+test("séances validées : marquage et bilan de la semaine", async () => {
+  const { plan } = await planFictif();
+  const sem = plan.semaines[3];
+  const [a, b] = sem.seances;
+  marquerRealisees(plan, { [a.id]: a.date }, b.date);
+  vrai(a.faite && !b.faite, "marquage");
+  egal(a.valideeLe, a.date);
+  egal(sem.bilan.faites, 1);
+  egal(sem.bilan.echues, 2, "séances passées ou du jour :");
+  egal(sem.bilan.total, sem.seances.length);
+  marquerRealisees(plan, {}, b.date);
+  vrai(!a.faite, "validation annulée");
 });

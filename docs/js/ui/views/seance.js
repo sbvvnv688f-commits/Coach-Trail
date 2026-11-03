@@ -26,6 +26,8 @@ export function ficheSeance(app, s) {
       chiffre(s.dplus ? `${fmtMetres(s.dplus)} m` : "—", "dénivelé +"),
       chiffre(fmtDuree(s.duree), s.role === "course" ? "temps visé" : "durée")),
 
+    validation(app, s),
+
     h("p", { class: `intensite n${s.niveau}` }, h("i", { class: `pastille n${s.niveau}` }), `Intensité : ${LIBELLES_NIVEAU[s.niveau].toLowerCase()} (${s.niveau}/5)`),
 
     bloc("Allure ajustée à tenir (NGP)",
@@ -101,8 +103,18 @@ function renfo(fiche, s) {
     h("p", { class: "discret" }, RENFO_REGLE));
 }
 
+function validation(app, s) {
+  if (s.faite) {
+    return h("div", { class: "validee" },
+      h("span", {}, h("b", {}, "✓ Séance faite"), s.valideeLe ? h("em", {}, `Validée le ${fmtDateLongue(s.valideeLe)}`) : null),
+      h("button", { type: "button", class: "lien", onclick: () => app.basculerRealisee(s) }, "Annuler"));
+  }
+  if (s.date > app.etat.aujourdhui) return null;
+  return h("button", { type: "button", class: "bouton valider", onclick: () => app.basculerRealisee(s) }, "✓ J'ai fait cette séance");
+}
+
 function deplacement(app, s, semaine) {
-  if (!semaine || s.role === "course") return null;
+  if (!semaine || s.role === "course" || s.faite) return null;
   const libres = joursLibres(semaine, s).filter((d) => d !== s.datePrevue);
   return bloc("Déplacer dans la semaine",
     h("div", { class: "jours-libres" },
