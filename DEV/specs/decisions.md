@@ -25,6 +25,8 @@ Une décision validée ne se rediscute que sur un fait nouveau, noté ici.
 | D-17 | 2026-11-03 | Ski de randonnée et ski de fond proposés en **alternative au choix** sur les cases concernées | Choix de l'utilisateur |
 | D-18 | 2026-11-03 | Tests et captures avec Chrome sans interface (Edge rend la main au processus ouvert sans rien produire sur ce poste) | Constat technique |
 | D-19 | 2026-11-03 | Contenus génériques (ressentis, exercices) en modules JS dans `docs/js/data/` plutôt qu'en JSON chargé | Mis en cache avec le code, aucun chargement asynchrone |
+| D-20 | 2026-11-03 | Règle d'accès : **détenir la fiche d'un athlète = accéder à son plan et à ses informations** ; rien d'autre n'y donne accès. Plusieurs athlètes possibles sur un même appareil (coach) | Demande de l'utilisateur |
+| D-21 | 2026-11-03 | Athlète à distance : **formulaire PDF remplissable** hors ligne (`DEV/formulaire/`), relu par `DEV/tools/lire-formulaire.py` en brouillon de fiche ; réponses hors dépôt | Choix de l'utilisateur ; contrôles iOS fiables (texte, cases) |
 ## Ouvertes
 
 | N° | Question | Proposition |

@@ -200,7 +200,7 @@ window.addEventListener("hashchange", () => {
 function rendreEntete() {
   const fiche = app.ficheActive();
   vider(el.entete,
-    h("div", { class: "marque" }, h("span", { class: "marque-casse" }, "Casse"), h("span", { class: "marque-pattes" }, "Pattes")),
+    h("div", { class: "marque" }, h("img", { class: "marque-logo", src: "icons/icon-192.png", alt: "" }), h("span", { class: "marque-casse" }, "Casse"), h("span", { class: "marque-pattes" }, "Pattes")),
     fiche && etat.fiches.size > 1
       ? h("label", { class: "athlete-choix" },
         h("span", { class: "visuellement-cache" }, "Athlète"),

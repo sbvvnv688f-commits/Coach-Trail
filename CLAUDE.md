@@ -24,6 +24,9 @@ le domicile et des données de santé. `DEV/archive/` (antécédents, disponibil
 - **Fiches athlètes : jamais dans le dépôt.** Claude les écrit dans `../Casse-Pattes-fiches/` (dossier
   frère du dépôt, hors Git) et les remet à l'utilisateur, qui les importe lui-même dans l'application.
   Aucune fiche, même fictive, dans `docs/` ; la fiche fictive des tests est `DEV/tests/fixtures/fiche-fictive.json`.
+- **Formulaires athlètes remplis** et brouillons (`*.brouillon.json`) : uniquement dans
+  `../Casse-Pattes-fiches/reponses/`, jamais dans le dépôt. Seul le formulaire **vierge** est publié (`DEV/formulaire/`).
+- Règle d'accès (D-20) : détenir la fiche d'un athlète = accéder à ses données ; plusieurs athlètes par appareil autorisés.
 - Captures d'écran d'une vraie fiche : dans le dossier temporaire de session, jamais dans le dépôt.
 - Tests publiés : uniquement des fichiers de `DEV/tests/fixtures/`, anonymisés (coordonnées décalées,
   aucun nom, aucun numéro de série d'appareil).
@@ -56,6 +59,14 @@ le domicile et des données de santé. `DEV/archive/` (antécédents, disponibil
 - Après toute modification du générateur : `python DEV/tools/run-tests.py` (invariants vérifiés sur la
   fiche fictive et sur les fiches réelles du poste), puis lecture du plan en texte :
   `/DEV/tests/apercu-plan.html?fiche=<fichier>` via `serve.py`.
+
+## Formulaire athlète (athlète à distance)
+
+- Générateur : `DEV/tools/formulaire-athlete.py` ; lecture : `DEV/tools/lire-formulaire.py`. Les noms de champs
+  sont le contrat entre les deux. Environnement : `%LOCALAPPDATA%\casse-pattes\.venv-formulaire` (reportlab,
+  pypdf, pypdfium2 ; `DEV/tools/requirements-formulaire.txt`). Après modification : `DEV/tests/formulaire_test.py`
+  et rendu des pages en PNG (pypdfium2) dans le dossier temporaire pour relecture.
+- Contrôles PDF : texte, cases et radios carrés uniquement (la forme ronde de reportlab s'affiche mal), aucun JavaScript.
 
 ## Tests
 

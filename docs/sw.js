@@ -2,7 +2,7 @@
 // VERSION doit être égale à VERSION_APP de js/version.js (vérifié par les tests) : sans changement
 // de version, l'iPhone garde l'ancienne application en cache.
 
-const VERSION = "1.0.0";
+const VERSION = "1.0.1";
 const CACHE = `casse-pattes-${VERSION}`;
 
 const FICHIERS = [

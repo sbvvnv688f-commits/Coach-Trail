@@ -24,7 +24,8 @@ h1, h2, h3 { margin: 0; line-height: 1.2; }
   background: var(--encre); color: var(--papier);
 }
 @media (prefers-color-scheme: dark) { .entete { background: #0A120E; color: #EEF0EA; } }
-.marque { font: 800 1.3rem/1 var(--police-titre); letter-spacing: .02em; text-transform: uppercase; display: flex; gap: .3em; }
+.marque { font: 800 1.3rem/1 var(--police-titre); letter-spacing: .02em; text-transform: uppercase; display: flex; align-items: center; gap: .3em; }
+.marque-logo { width: 34px; height: 34px; border-radius: 8px; margin-right: .25em; }
 .marque-casse { color: inherit; }
 .marque-pattes { color: #8FC2A6; }
 .athlete, .athlete-choix select {
@@ -191,14 +192,7 @@ button.case.course .case-type, button.case.course .case-num, button.case.course 
 
 /* ---------- accueil ---------- */
 .vue-accueil { text-align: left; padding-top: 24px; }
-.accueil-logo {
-  width: 120px; height: 120px; border-radius: 27px; background: #F4F3EE; border: 1px solid var(--trait);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin-bottom: 22px;
-  font: 800 1.85rem/.9 var(--police-titre);
-}
-.accueil-logo .marque-casse { color: #16281F; }
-.accueil-logo .marque-pattes { color: #2E6B4F; }
-.accueil-logo i { display: block; width: 76px; height: 3px; background: #9C6B3F; border-radius: 2px; }
+.accueil-logo { display: block; width: 120px; height: 120px; border-radius: 27px; border: 1px solid var(--trait); margin-bottom: 22px; }
 .vue-accueil p { font-size: .95rem; }
 
 /* ---------- messages ---------- */

@@ -17,8 +17,7 @@ function erreursImport(app) {
 
 export function vueAccueil(app) {
   return h("section", { class: "vue vue-accueil" },
-    h("div", { class: "accueil-logo", "aria-hidden": "true" },
-      h("span", { class: "marque-casse" }, "CASSE"), h("i", {}), h("span", { class: "marque-pattes" }, "PATTES")),
+    h("img", { class: "accueil-logo", src: "icons/icon-512.png", alt: "Casse-Pattes" }),
     h("h1", {}, "Importe ta fiche athlète"),
     h("p", {}, "Casse-Pattes construit ton plan d'entraînement et tes objectifs à partir de ta fiche : un fichier qui t'est remis après l'entretien avec ton coach. Elle reste sur ce téléphone, rien n'est envoyé en ligne."),
     h("button", { type: "button", class: "bouton", onclick: app.choisirFichier }, "Choisir ma fiche"),

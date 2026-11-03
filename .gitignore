@@ -4,6 +4,9 @@ DEV/specs/historique/
 DEV/archive/
 # Fiches athlètes, plans et objectifs personnels (importés à la main dans l'application)
 DEV/private/
+# Formulaires athlètes remplis et brouillons de fiche (Casse-Pattes-fiches/reponses/, hors dépôt)
+*.brouillon.json
+DEV/formulaire/reponses/
 
 # Système
 __pycache__/

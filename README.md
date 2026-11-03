@@ -22,6 +22,7 @@ ordinateur. Elle remplace Coach Trail à la même adresse :
 | `docs/` | Application publiée par GitHub Pages |
 | `DEV/specs/` | Inventaire de l'existant, architecture, feuille de route, décisions |
 | `DEV/tests/` | Tests des calculs et des lecteurs de fichiers, fichiers d'exemple anonymisés |
+| `DEV/formulaire/` | Formulaire athlète vierge (PDF remplissable, à envoyer aux nouveaux athlètes) |
 | `DEV/tools/` | Scripts utilitaires |
 
 ## Travailler en local
@@ -34,6 +35,16 @@ python DEV/tools/serve.py          # application : http://127.0.0.1:8000/docs/
                                    # tests       : http://127.0.0.1:8000/DEV/tests/
 python DEV/tools/run-tests.py      # tests sans fenêtre, rapport dans la console
 python DEV/tools/make-icons.py     # icônes depuis DEV/specs/logo-09a.svg
+```
+
+Formulaire athlète (bibliothèques PDF dans un environnement dédié, hors OneDrive) :
+
+```
+python -m venv %LOCALAPPDATA%\casse-pattes\.venv-formulaire
+%LOCALAPPDATA%\casse-pattes\.venv-formulaire\Scripts\pip install -r DEV/tools/requirements-formulaire.txt
+…\.venv-formulaire\Scripts\python DEV/tools/formulaire-athlete.py        # PDF vierge dans DEV/formulaire/
+…\.venv-formulaire\Scripts\python DEV/tools/lire-formulaire.py <pdf>     # brouillon de fiche à côté du PDF
+…\.venv-formulaire\Scripts\python DEV/tests/formulaire_test.py          # aller-retour avec des valeurs fictives
 ```
 
 ## Publication (GitHub Pages)
@@ -52,4 +63,5 @@ est affiché dans les réglages.
 Le dépôt est public. Les fichiers de montre réels, l'historique de conception et les anciennes versions
 restent sur le poste de travail (exclus par `.gitignore`). Les fiches athlètes ne sont jamais dans le
 dépôt : chacun importe la sienne dans l'application, qui la garde sur l'appareil. Le site publié ne
-contient ni ne télécharge aucune donnée d'athlète. Les tests publiés utilisent une fiche fictive.
+contient ni ne télécharge aucune donnée d'athlète. Les tests publiés utilisent une fiche fictive. Les formulaires remplis
+renvoyés par les athlètes restent hors du dépôt. Détenir la fiche d'un athlète donne accès à son plan ; rien d'autre.

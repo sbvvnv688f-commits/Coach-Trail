@@ -139,6 +139,18 @@ choix de coaching évidents.
    consultation quand un symptôme le justifie.
 6. Relire la fiche avec l'athlète (résumé en clair), puis l'écrire hors du dépôt et donner son chemin.
 
+### Athlète à distance : formulaire PDF
+
+Quand l'entretien en direct n'est pas possible :
+1. Envoyer `DEV/formulaire/Casse-Pattes-formulaire-athlete.pdf` (vierge, remplissable hors ligne sur iPhone ou
+   ordinateur). L'athlète le renvoie rempli, si possible avec les fichiers FIT de ses séances de référence.
+2. Ranger la réponse dans `Projets_Perso-Dev-IA/Casse-Pattes-fiches/reponses/` (hors dépôt), puis lancer
+   `DEV/tools/lire-formulaire.py <pdf>` : brouillon `<id>.brouillon.json` en unités SI, avec la liste
+   **aDemander** (manques) et **alertes** (incohérences, douleurs, traitement modifiant la FC).
+3. Poser à l'athlète les seules questions de `aDemander` et des alertes, puis écrire la fiche selon les
+   règles ci-dessus : allures de fond, tempo, seuil tirées des séances (`allurePlat`, `pctFcMax`), rôle des
+   jours, plafonds de FC, objectifs avec jour de la semaine contrôlé.
+
 ### Questions par section
 
 | Section | Questions |
